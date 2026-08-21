@@ -49,12 +49,12 @@
   .btn-wa:hover{background:var(--wa-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,211,102,.3)}
   .btn-wa-lg{background:var(--wa);color:white;padding:14px 24px;font-size:15px;width:100%;justify-content:center}
   .btn-wa-lg:hover{background:var(--wa-dark)}
+  .btn-wa-lg[aria-disabled="true"]{background:var(--border);color:var(--muted);cursor:default;pointer-events:none}
   .full{width:100%;justify-content:center}
 
   .card{background:white;border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s}
   .card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
   .card-flat{background:white;border-radius:var(--r);border:1px solid var(--border)}
-  .card-hi{background:white;border-radius:var(--r);border:2px solid var(--navy);box-shadow:var(--shadow)}
 
   .badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--bg-warm);color:var(--mid)}
   .b-navy{background:rgba(15,37,64,.08);color:var(--navy)}
@@ -78,29 +78,24 @@
   .al-warn{background:var(--warn-bg);border:1px solid #fde68a;color:var(--warn)}
   .al-green{background:var(--green-bg);border:1px solid #bbf7d0;color:var(--green)}
 
-  .fbox{background:var(--bg-warm);border:1px solid var(--border);border-radius:var(--rs);padding:16px;font-size:13px}
-  .fr{display:flex;justify-content:space-between;padding:5px 0;color:var(--mid)}
-  .fr-total{font-weight:700;color:var(--navy);font-size:15px;border-top:1px solid var(--border);margin-top:6px;padding-top:10px;display:flex;justify-content:space-between}
-  .fr-tech{color:var(--green);font-weight:600;display:flex;justify-content:space-between;padding:5px 0}
-
   .av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:700;font-size:18px;color:white;flex-shrink:0}
   .av-lg{width:72px;height:72px;font-size:22px}
 
   .stag{font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px;background:var(--bg-warm);color:var(--mid);border:1px solid var(--border);display:inline-block}
 
-  .strack{display:flex;align-items:center;margin-bottom:28px}
-  .sdot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
-  .sd-done{background:var(--navy);color:white}
-  .sd-active{background:var(--amber);color:white}
-  .sd-pending{background:var(--border);color:var(--muted)}
-  .sline{flex:1;height:2px;background:var(--border)}
-  .sl-done{background:var(--navy)}
+  .job-row{border:1px solid var(--border);border-radius:var(--rs);padding:14px 16px;cursor:pointer;background:white}
+  .job-row.selected{border:2px solid var(--navy);background:rgba(15,37,64,.02)}
 
-  .bubble{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.6;max-width:82%}
-  .b-them{background:var(--bg-warm);border-radius:4px 16px 16px 16px;color:var(--text);align-self:flex-start}
-  .b-me{background:var(--navy);color:white;border-radius:16px 4px 16px 16px;align-self:flex-end}
-
-  .acard{background:white;border-radius:var(--r);border:2px solid var(--amber);padding:20px}
+  .cat-scroll{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none;-ms-overflow-style:none}
+  .cat-scroll::-webkit-scrollbar{display:none}
+  .cat-card{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 12px;border-radius:16px;background:white;border:1px solid var(--border);box-shadow:var(--shadow);flex-shrink:0;width:112px;transition:all .18s ease;cursor:pointer;text-align:center}
+  .cat-card:not(:disabled):hover{box-shadow:var(--shadow-lg);transform:translateY(-3px);border-color:var(--amber)}
+  .cat-card:disabled{cursor:default;opacity:.55}
+  .cat-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;transition:transform .18s ease}
+  .cat-card:not(:disabled):hover .cat-icon{transform:scale(1.06)}
+  .cat-icon svg{width:23px;height:23px}
+  .cat-name{font-size:12.5px;font-weight:600;line-height:1.3}
+  .cat-tag{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
 
   .foot{background:var(--navy);color:rgba(255,255,255,.7);padding:32px 16px}
   .foot-in{max-width:1120px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
@@ -117,23 +112,6 @@
   .svc-btn{padding:10px 18px;font-size:14px;border-radius:var(--rs);border:1.5px solid var(--border);background:white;color:var(--mid)}
   .svc-btn.selected{border-color:var(--navy);background:var(--navy);color:white}
 
-  .mode-opt{padding:18px 20px;text-align:left;cursor:pointer;border:1px solid var(--border);border-radius:var(--r);background:white;width:100%}
-  .mode-opt.selected{border:2px solid var(--navy);background:rgba(15,37,64,.03)}
-
-  .job-row{border:1px solid var(--border);border-radius:var(--rs);padding:14px 16px;cursor:pointer;background:white}
-  .job-row.selected{border:2px solid var(--navy);background:rgba(15,37,64,.02)}
-
-  .cat-scroll{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none;-ms-overflow-style:none}
-  .cat-scroll::-webkit-scrollbar{display:none}
-  .cat-card{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 12px;border-radius:16px;background:white;border:1px solid var(--border);box-shadow:var(--shadow);flex-shrink:0;width:112px;transition:all .18s ease;cursor:pointer;text-align:center}
-  .cat-card:not(:disabled):hover{box-shadow:var(--shadow-lg);transform:translateY(-3px);border-color:var(--amber)}
-  .cat-card:disabled{cursor:default;opacity:.55}
-  .cat-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;transition:transform .18s ease}
-  .cat-card:not(:disabled):hover .cat-icon{transform:scale(1.06)}
-  .cat-icon svg{width:23px;height:23px}
-  .cat-name{font-size:12.5px;font-weight:600;line-height:1.3}
-  .cat-tag{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
-
   #root{min-height:100vh;display:flex;flex-direction:column}
   main{flex:1}
 </style>
@@ -142,14 +120,18 @@
 <div id="root"></div>
 
 <script>
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
-const TUCADI_FEE_PCT = 0.10;
-const PLATFORM_FEE_EVAL = 49;
-const RETENTION_DAYS = 7;
-const fmt = (n) => `$${Number(n).toLocaleString("es-MX")} MXN`;
-const esc = (s) => { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+"use strict";
 
-// ─── CATEGORY ICONS (inline SVG, stroke-based) ─────────────────────────────────
+// ─── FASE ACTUAL: VALIDACIÓN, SIN COSTO ────────────────────────────────────────
+// TUCADI no cobra fee de plataforma ni comisión todavía. El objetivo de esta
+// versión es medir si el loop solicitud → contacto → servicio funciona.
+// El cierre del trato (cotización, pago, fecha) ocurre directo entre cliente
+// y técnico por WhatsApp — ese lado aún no vive dentro de la app.
+
+const fmt = (n) => `$${Number(n).toLocaleString("es-MX")} MXN`;
+const esc = (s) => { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; };
+
+// ─── CATEGORY ICONS ─────────────────────────────────────────────────────────────
 const ICON_AC = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="7" rx="2"/><path d="M6 13v2M10 13v3M14 13v2M18 13v3"/><circle cx="18.5" cy="9.5" r="1"/></svg>`;
 const ICON_WRENCH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2.6-2.6 2.8-2.8z"/></svg>`;
 const ICON_BOLT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>`;
@@ -166,7 +148,9 @@ const CATEGORIES = [
   { icon: ICON_ROLLER, label: "Pintura" },
 ];
 
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
+// ─── MOCK DATA ──────────────────────────────────────────────────────────────────
+// El precio en cada job es el precio del técnico. No hay fee ni comisión encima
+// mientras estemos en fase de validación.
 const TECHNICIANS = [
   {
     id: 1, name: "Carlos Mendoza", rating: 4.9, reviewCount: 47, experienceYears: 12,
@@ -174,7 +158,6 @@ const TECHNICIANS = [
     zone: "Centro / Pitic",
     description: "Técnico certificado con más de 12 años de experiencia en instalación y reparación de minisplits de todas las marcas. Trabajo garantizado, precios justos y atención el mismo día.",
     phone: "6621234567", avatar: "CM", avatarColor: "#1e3a5f",
-    evaluationPrice: 150, evaluationModes: ["chat", "presencial"],
     jobs: [
       { id: "j1", name: "Instalación minisplit 1 ton", price: 1200, desc: "Incluye soporte, cañería 3m y conexión eléctrica." },
       { id: "j2", name: "Reparación / diagnóstico", price: 800, desc: "Revisión completa, carga de gas y reparación de fallas eléctricas." },
@@ -187,7 +170,6 @@ const TECHNICIANS = [
     zone: "Villa del Real / Perisur",
     description: "Especialista en instalaciones residenciales y comerciales. Trabajo limpio, materiales de calidad y garantía de 6 meses en instalaciones nuevas.",
     phone: "6629876543", avatar: "RS", avatarColor: "#2d6a4f",
-    evaluationPrice: 200, evaluationModes: ["presencial"],
     jobs: [
       { id: "j4", name: "Instalación completa con materiales", price: 1800, desc: "Minisplit hasta 2 ton, materiales incluidos, garantía 6 meses." },
       { id: "j5", name: "Mantenimiento preventivo", price: 500, desc: "Limpieza profunda, revisión eléctrica y reporte de condición." },
@@ -199,7 +181,6 @@ const TECHNICIANS = [
     zone: "Lomas de Hermosillo / Bugambilias",
     description: "Me especializo en diagnóstico y reparación de equipos. Reviso fallas eléctricas, problemas de refrigerante y mantenimiento preventivo. Respondo rápido por WhatsApp.",
     phone: "6625551234", avatar: "JF", avatarColor: "#7b3f00",
-    evaluationPrice: 100, evaluationModes: ["chat", "presencial"],
     jobs: [
       { id: "j6", name: "Reparación de compresor", price: 950, desc: "Diagnóstico y reparación de fallas en compresor y sistema de enfriamiento." },
       { id: "j7", name: "Mantenimiento básico", price: 350, desc: "Limpieza de filtros y revisión de niveles de refrigerante." },
@@ -211,7 +192,6 @@ const TECHNICIANS = [
     zone: "San Benito / Proyecto Río",
     description: "Joven técnico con formación en refrigeración industrial. Trabajo con marcas LG, Samsung, Carrier y Daikin. Presupuesto sin costo.",
     phone: "6623334444", avatar: "MV", avatarColor: "#4a1942",
-    evaluationPrice: 0, evaluationModes: ["chat", "presencial"],
     jobs: [
       { id: "j8", name: "Instalación estándar", price: 900, desc: "Instalación limpia con garantía de 3 meses en mano de obra." },
       { id: "j9", name: "Reparación general", price: 650, desc: "Diagnóstico y reparación de fallas comunes en minisplits." },
@@ -244,32 +224,38 @@ const REVIEWS = {
 
 const WA_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
 
-// ─── GLOBAL STATE ─────────────────────────────────────────────────────────────
+// ─── WHATSAPP MESSAGE BUILDER ───────────────────────────────────────────────────
+// Genera el link wa.me con el mensaje ya armado, para que el cliente solo
+// tenga que darle "enviar" y el técnico reciba contexto completo.
+function buildWaLink(tech, job, description) {
+  const lines = [`Hola ${tech.name.split(" ")[0]}, te contacto desde TUCADI.`];
+  if (job) lines.push(`Me interesa: ${job.name} (referencia ${fmt(job.price)}).`);
+  if (description && description.trim()) lines.push(`Lo que está pasando: ${description.trim()}`);
+  lines.push("¿Podrías darme más información y una cotización?");
+  const text = encodeURIComponent(lines.join(" "));
+  return `https://wa.me/52${tech.phone}?text=${text}`;
+}
+
+// ─── GLOBAL STATE ────────────────────────────────────────────────────────────────
 const S = {
   page: "home",
   eid: null,
   list: { search: "", svc: "", zone: "", rating: "", open: false },
-  evalState: null,
+  request: { selectedJob: null },
   profile: { selJob: null },
   signup: { done: false },
 };
 
-function resetEvalState() {
-  S.evalState = { step: 1, mode: null, chatLog: [
-    { from: "tech", text: null } // placeholder, filled on render since it needs tech name
-  ], date: "", time: "", address: "", booked: false, selectedJob: null };
-}
-
 function nav(target, id) {
   if (id !== undefined && id !== null) S.eid = id;
-  if (target === "eval") resetEvalState();
+  if (target === "eval") S.request = { selectedJob: null };
   if (target === "profile") S.profile.selJob = null;
   S.page = target;
   renderApp();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// ─── SHARED PIECES ────────────────────────────────────────────────────────────
+// ─── SHARED PIECES ───────────────────────────────────────────────────────────────
 function NavHTML() {
   return `
   <nav class="nav"><div class="nav-in">
@@ -283,7 +269,7 @@ function NavHTML() {
 }
 
 function FooterHTML() {
-  const links = [["Inicio","home"],["Técnicos","list"],["¿Cómo funciona?","how"],["Registrarme","signup"]];
+  const links = [["Inicio", "home"], ["Técnicos", "list"], ["¿Cómo funciona?", "how"], ["Registrarme", "signup"]];
   return `
   <footer class="foot"><div class="foot-in">
     <div>
@@ -291,16 +277,15 @@ function FooterHTML() {
       <p style="font-size:13px;margin-top:6px">Técnicos locales de confianza · Hermosillo, Sonora</p>
     </div>
     <div style="display:flex;gap:4px;flex-wrap:wrap">
-      ${links.map(([l,p]) => `<button class="btn btn-ghost" style="color:rgba(255,255,255,.6);font-size:13px" data-nav="${p}">${l}</button>`).join("")}
+      ${links.map(([l, p]) => `<button class="btn btn-ghost" style="color:rgba(255,255,255,.6);font-size:13px" data-nav="${p}">${l}</button>`).join("")}
     </div>
     <p style="font-size:12px;width:100%;text-align:center;border-top:1px solid rgba(255,255,255,.1);padding-top:16px;margin-top:4px">
-      © 2025 TUCADI · Hermosillo, Sonora, México
+      © 2026 TUCADI · Hermosillo, Sonora, México · Fase de validación, sin costo
     </p>
   </div></footer>`;
 }
 
 function TechCardHTML(tech) {
-  const free = tech.evaluationPrice === 0;
   return `
   <div class="card" style="padding:20px">
     <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">
@@ -318,28 +303,17 @@ function TechCardHTML(tech) {
         <div style="font-size:12px;color:var(--muted);margin-top:4px">📍 ${esc(tech.zone)}</div>
       </div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px">
       ${tech.services.map(s => `<span class="stag">${esc(s)}</span>`).join("")}
     </div>
-    <div style="background:var(--bg-warm);border-radius:var(--rs);padding:10px 14px;margin-bottom:16px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Evaluación</div>
-        <div style="font-size:15px;font-weight:700;color:${free ? "var(--green)" : "var(--navy)"};margin-top:2px">${free ? "Gratis" : fmt(tech.evaluationPrice)}</div>
-        <div style="font-size:11px;color:var(--amber);font-weight:600;margin-top:2px">+ ${fmt(PLATFORM_FEE_EVAL)} tarifa TUCADI</div>
-      </div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
-        ${tech.evaluationModes.includes("chat") ? `<span class="badge b-blue" style="font-size:11px">💬 Chat</span>` : ""}
-        ${tech.evaluationModes.includes("presencial") ? `<span class="badge b-navy" style="font-size:11px">📅 Cita</span>` : ""}
-      </div>
-    </div>
     <div style="display:flex;gap:10px">
-      <button class="btn btn-amber full" style="flex:1;padding:12px 16px;font-size:14px" data-nav="eval" data-id="${tech.id}">Solicitar evaluación</button>
+      <button class="btn btn-amber full" style="flex:1;padding:12px 16px;font-size:14px" data-nav="eval" data-id="${tech.id}">Solicitar</button>
       <button class="btn btn-outline" style="flex-shrink:0;padding:12px 14px" data-nav="profile" data-id="${tech.id}">Perfil</button>
     </div>
   </div>`;
 }
 
-// ─── CATEGORIES ROW ────────────────────────────────────────────────────────────
+// ─── CATEGORIES ROW ──────────────────────────────────────────────────────────────
 function CategoriesHTML() {
   return `
   <section class="sec-sm" style="padding-bottom:8px">
@@ -358,12 +332,12 @@ function CategoriesHTML() {
   </section>`;
 }
 
-// ─── HOME PAGE ────────────────────────────────────────────────────────────────
+// ─── HOME PAGE ────────────────────────────────────────────────────────────────────
 function HomeHTML() {
   const bullets = [
     { i: "📍", t: "Técnicos locales", d: "Todos en Hermosillo. Sin intermediarios." },
-    { i: "🔒", t: "Pago protegido 7 días", d: "Tu dinero se libera solo cuando el trabajo esté listo." },
-    { i: "⭐", t: "Reseñas reales", d: "Solo clientes que pagaron pueden calificar." },
+    { i: "💬", t: "Contacto directo por WhatsApp", d: "Le escribes al técnico y coordinan precio y fecha entre ustedes." },
+    { i: "⭐", t: "Reseñas reales", d: "De personas que ya contrataron el servicio." },
   ];
   return `
   <div>
@@ -376,7 +350,7 @@ function HomeHTML() {
             Encuentra técnicos de aire acondicionado <span style="color:var(--amber-light)">confiables</span> en Hermosillo
           </h1>
           <p style="font-size:clamp(14px,2vw,16px);color:rgba(255,255,255,.75);margin-bottom:28px;line-height:1.7;max-width:460px">
-            Solicita una evaluación, compara presupuestos y paga de forma segura. TUCADI protege tu dinero hasta que el trabajo quede listo.
+            Compara técnicos, revisa reseñas reales y solicita una evaluación. El técnico te responde directo por WhatsApp.
           </p>
           <div style="display:flex;flex-direction:column;gap:12px;max-width:320px">
             <button class="btn btn-amber full" style="font-size:15px;padding:15px" data-nav="list">Ver técnicos disponibles →</button>
@@ -421,8 +395,8 @@ function HomeHTML() {
     <section class="sec-sm" style="background:var(--bg-warm);border-bottom:1px solid var(--border)">
       <div class="con" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
         <div>
-          <h2 style="font-family:var(--fd);font-size:clamp(18px,3vw,26px);font-weight:600;color:var(--navy);margin-bottom:8px">Tu dinero, protegido siempre</h2>
-          <p style="font-size:14px;color:var(--mid);max-width:460px;line-height:1.7">Cuando contratas un trabajo, TUCADI retiene el pago 7 días. Si hay algún problema, tienes ese tiempo para reportarlo.</p>
+          <h2 style="font-family:var(--fd);font-size:clamp(18px,3vw,26px);font-weight:600;color:var(--navy);margin-bottom:8px">Estamos en fase de prueba</h2>
+          <p style="font-size:14px;color:var(--mid);max-width:460px;line-height:1.7">TUCADI no cobra nada todavía. Estamos validando si este modelo ayuda a clientes y técnicos antes de construir pagos y comisiones.</p>
         </div>
         <button class="btn btn-navy" style="flex-shrink:0" data-nav="how">Ver cómo funciona</button>
       </div>
@@ -440,45 +414,35 @@ function HomeHTML() {
   </div>`;
 }
 
-// ─── HOW IT WORKS ─────────────────────────────────────────────────────────────
+// ─── HOW IT WORKS ─────────────────────────────────────────────────────────────────
 function HowHTML() {
   const steps = [
-    { n: "01", t: "Busca y elige un técnico", b: "Explora perfiles, lee reseñas reales y compara precios. Todos los técnicos son verificados y con calificaciones reales." },
-    { n: "02", t: "Solicita una evaluación", b: "Antes del trabajo, el técnico evalúa el problema — por chat en la app o en persona (cita). El precio lo define el técnico.",
-      extra: `<div class="fbox" style="margin-top:12px">
-        <div class="fr"><span>Precio del técnico</span><span>Lo que defina (puede ser $0)</span></div>
-        <div class="fr" style="color:var(--amber)"><span>Tarifa TUCADI (siempre aplica)</span><span style="font-weight:700">$${PLATFORM_FEE_EVAL} MXN</span></div>
-        <div class="fr-total"><span>Total evaluación</span><span>Precio técnico + $${PLATFORM_FEE_EVAL}</span></div>
-        <div style="font-size:11px;color:var(--muted);margin-top:8px">⚠️ TUCADI no retiene el precio del técnico. El $49 es tarifa de plataforma independiente.</div>
-      </div>` },
-    { n: "03", t: "Acepta el presupuesto y paga", b: "Después de evaluar, el técnico te envía el precio del trabajo. Si aceptas, pagas por la app. Tu dinero queda protegido — no llega al técnico todavía.",
-      extra: `<div class="fbox" style="margin-top:12px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Ejemplo: trabajo de $1,000 MXN</div>
-        <div class="fr"><span>Tú pagas</span><span style="font-weight:700">$1,000 MXN</span></div>
-        <div class="fr"><span>TUCADI retiene</span><span>${RETENTION_DAYS} días calendario</span></div>
-        <div class="fr"><span>Comisión TUCADI</span><span>10% = $100 MXN</span></div>
-        <div class="fr-tech"><span>🟢 Técnico recibe</span><span>$900 MXN</span></div>
-      </div>` },
-    { n: "04", t: "El trabajo se realiza", b: `El técnico realiza el servicio. Si quedas conforme, no haces nada — a los ${RETENTION_DAYS} días TUCADI libera el pago. Si hay un problema, tienes ese plazo para reportarlo.` },
-    { n: "05", t: "Califica al técnico", b: "Solo los clientes que pagaron pueden dejar reseñas. Eso garantiza que las calificaciones son reales y confiables." },
+    { n: "01", t: "Busca y elige un técnico", b: "Explora perfiles, lee reseñas reales y compara lo que ofrece cada técnico." },
+    { n: "02", t: "Solicita una evaluación", b: "Cuéntale qué está pasando. TUCADI arma un mensaje con el resumen y lo abre directo en WhatsApp." },
+    { n: "03", t: "Recibe tu cotización", b: "El técnico te contacta, evalúa el problema y te dice el precio. Tú decides si aceptar." },
+    { n: "04", t: "Se realiza el trabajo", b: "Coordinan la fecha, forma de pago y detalles directo entre ustedes — por ahora fuera de la app." },
+    { n: "05", t: "Cuéntanos cómo te fue", b: "Estamos en fase de prueba: tu opinión sobre el técnico y el proceso nos ayuda a decidir qué construir después." },
   ];
   const techBullets = [
-    "Defines el precio de tu evaluación — puede ser $0 o lo que quieras. Además siempre se cobra al cliente $49 MXN de tarifa de plataforma TUCADI, que no te corresponde a ti.",
-    "Después de evaluar, defines el precio del trabajo. El cliente acepta o no — sin presiones.",
-    "Recibes el 90% de cada trabajo. TUCADI retiene el 10% como comisión de plataforma.",
-    `El dinero se libera a los ${RETENTION_DAYS} días — tiempo para que el cliente confirme que todo quedó bien.`,
+    "Tú defines tus precios y tiempos, siempre.",
+    "Recibes solicitudes de clientes reales de tu zona directo en tu WhatsApp.",
+    "No hay comisión ni fee mientras estemos en fase de validación.",
+    "Tu perfil y reseñas se construyen desde ahora, aunque el trato se cierre por fuera.",
   ];
   return `
   <div>
     <div style="background:var(--bg-warm);border-bottom:1px solid var(--border);padding:32px 16px">
       <div class="con" style="max-width:700px">
         <h1 style="font-family:var(--fd);font-size:clamp(24px,4vw,36px);font-weight:700;color:var(--navy);margin-bottom:8px">¿Cómo funciona TUCADI?</h1>
-        <p style="font-size:14px;color:var(--mid);line-height:1.7">Un proceso claro y justo para clientes y técnicos.</p>
+        <p style="font-size:14px;color:var(--mid);line-height:1.7">Un proceso claro para clientes y técnicos, en su versión más simple.</p>
       </div>
     </div>
 
     <div class="sec" style="padding-top:36px">
       <div class="con" style="max-width:700px">
+
+        <div class="alert al-info" style="margin-bottom:28px">💡 Fase de validación: TUCADI no cobra nada todavía — ni fee de plataforma ni comisión. Estamos probando si el modelo funciona antes de construir esa parte.</div>
+
         <h2 style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--navy);margin-bottom:20px">Para clientes</h2>
 
         ${steps.map((s, i) => `
@@ -490,26 +454,17 @@ function HowHTML() {
             <div style="flex:1;padding-bottom:6px">
               <h3 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:5px">${s.t}</h3>
               <p style="font-size:14px;color:var(--mid);line-height:1.7">${s.b}</p>
-              ${s.extra || ""}
             </div>
           </div>`).join("")}
 
         <div class="divider" style="margin:32px 0"></div>
 
         <h2 style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--navy);margin-bottom:16px">Para técnicos</h2>
-        <div class="card-flat" style="padding:20px 22px;margin-bottom:20px">
-          <h3 style="font-family:var(--fd);font-size:16px;font-weight:600;color:var(--navy);margin-bottom:12px">Tú controlas tus precios</h3>
+        <div class="card-flat" style="padding:20px 22px;margin-bottom:28px">
           ${techBullets.map(t => `
-            <div style="display:flex;gap:10px;font-size:14px;color:var(--mid);margin-bottom:8px">
+            <div style="display:flex;gap:10px;font-size:14px;color:var(--mid);margin-bottom:10px">
               <span style="color:var(--green);font-weight:700">✓</span><span>${t}</span>
             </div>`).join("")}
-        </div>
-
-        <div class="fbox" style="margin-bottom:28px">
-          <p style="font-weight:700;color:var(--navy);margin-bottom:10px;font-size:14px">Desglose para el técnico (trabajo de $1,500 MXN):</p>
-          <div class="fr"><span>Trabajo acordado</span><span>$1,500 MXN</span></div>
-          <div class="fr"><span>Comisión TUCADI (10%)</span><span>- $150 MXN</span></div>
-          <div class="fr-tech"><span>🟢 Recibes en ${RETENTION_DAYS} días</span><span>$1,350 MXN</span></div>
         </div>
 
         <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -521,7 +476,7 @@ function HowHTML() {
   </div>`;
 }
 
-// ─── LIST PAGE ────────────────────────────────────────────────────────────────
+// ─── LIST PAGE ──────────────────────────────────────────────────────────────────
 function filteredTechnicians() {
   const { search, svc, zone, rating } = S.list;
   return TECHNICIANS.filter(t => {
@@ -562,7 +517,7 @@ function ListHTML() {
           <span style="font-size:13px;color:var(--muted)">· Hermosillo</span>
         </div>
         <h1 style="font-family:var(--fd);font-size:clamp(22px,4vw,30px);font-weight:700;color:var(--navy);margin-bottom:4px">Técnicos disponibles</h1>
-        <p style="font-size:13px;color:var(--mid)">${TECHNICIANS.length} técnicos verificados</p>
+        <p style="font-size:13px;color:var(--mid)">${TECHNICIANS.length} técnicos</p>
       </div>
     </div>
 
@@ -580,17 +535,17 @@ function ListHTML() {
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
             <select class="sel" data-list-svc>
               <option value="">Todos los servicios</option>
-              ${["Instalación","Reparación","Mantenimiento"].map(o => `<option ${S.list.svc===o?"selected":""}>${o}</option>`).join("")}
+              ${["Instalación", "Reparación", "Mantenimiento"].map(o => `<option ${S.list.svc === o ? "selected" : ""}>${o}</option>`).join("")}
             </select>
             <select class="sel" data-list-zone>
               <option value="">Todas las zonas</option>
-              ${zones.map(z => `<option ${S.list.zone===z?"selected":""}>${esc(z)}</option>`).join("")}
+              ${zones.map(z => `<option ${S.list.zone === z ? "selected" : ""}>${esc(z)}</option>`).join("")}
             </select>
             <select class="sel" data-list-rating>
               <option value="">Cualquier calificación</option>
-              <option value="4.8" ${S.list.rating==="4.8"?"selected":""}>4.8+ ⭐</option>
-              <option value="4.5" ${S.list.rating==="4.5"?"selected":""}>4.5+ ⭐</option>
-              <option value="4.0" ${S.list.rating==="4.0"?"selected":""}>4.0+ ⭐</option>
+              <option value="4.8" ${S.list.rating === "4.8" ? "selected" : ""}>4.8+ ⭐</option>
+              <option value="4.5" ${S.list.rating === "4.5" ? "selected" : ""}>4.5+ ⭐</option>
+              <option value="4.0" ${S.list.rating === "4.0" ? "selected" : ""}>4.0+ ⭐</option>
             </select>
             ${active > 0 ? `<button class="btn btn-outline" style="font-size:13px;padding:10px 14px" data-filter-clear>✕ Limpiar</button>` : ""}
           </div>` : ""}
@@ -605,170 +560,14 @@ function ListHTML() {
   </div>`;
 }
 
-// ─── EVAL FLOW ────────────────────────────────────────────────────────────────
-function stepDotClass(step, idx) {
-  if (step === 1) return idx === 1 ? "sd-active" : "sd-pending";
-  if (step === 2 || step === 3) return idx < 2 ? "sd-done" : idx === 2 ? "sd-active" : "sd-pending";
-  return idx < 3 ? "sd-done" : "sd-active";
-}
-
-function ChatLogHTML(tech) {
-  return S.evalState.chatLog.map(m => {
-    const text = m.text === null ? `Hola, soy ${esc(tech.name.split(" ")[0])}. ¿En qué te puedo ayudar? Cuéntame el problema con tu equipo.` : esc(m.text);
-    return `<div class="bubble ${m.from === "me" ? "b-me" : "b-them"}">${text}</div>`;
-  }).join("");
-}
-
-function EvalHTML() {
+// ─── SOLICITAR (antes "eval") ────────────────────────────────────────────────────
+// Un solo paso: el cliente elige (opcional) un servicio de referencia, describe
+// el problema, y manda todo directo al WhatsApp del técnico. Nada de precios de
+// plataforma ni pasos de pago — eso no existe en esta fase.
+function RequestHTML() {
   const tech = TECHNICIANS.find(t => t.id === S.eid);
   if (!tech) return "";
-  const ev = S.evalState;
-  const free = tech.evaluationPrice === 0;
-  const evalTotal = tech.evaluationPrice + PLATFORM_FEE_EVAL;
-  const labels = ["Modo", "Evaluar", "Confirmar"];
-
-  let stepHTML = "";
-
-  if (ev.step === 1) {
-    stepHTML = `
-      <div>
-        <h2 style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--navy);margin-bottom:6px">¿Cómo quieres que te evalúe?</h2>
-        <p style="font-size:14px;color:var(--mid);margin-bottom:20px;line-height:1.6">El técnico revisará el problema y te dará un diagnóstico antes de cualquier trabajo.</p>
-
-        <div class="fbox" style="margin-bottom:20px">
-          <div class="fr"><span>Precio del técnico</span><span style="font-weight:700;color:${free ? "var(--green)" : "var(--navy)"}">${free ? "Gratis" : fmt(tech.evaluationPrice)}</span></div>
-          <div class="fr" style="color:var(--amber)"><span>Tarifa de plataforma TUCADI</span><span style="font-weight:700">${fmt(PLATFORM_FEE_EVAL)}</span></div>
-          <div class="fr-total"><span>Total evaluación</span><span>${fmt(evalTotal)}</span></div>
-          <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">La tarifa de plataforma TUCADI siempre aplica. El precio del técnico le corresponde íntegro a él — TUCADI no lo retiene.</p>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:12px">
-          ${tech.evaluationModes.includes("chat") ? `
-            <button class="mode-opt ${ev.mode === "chat" ? "selected" : ""}" data-mode="chat">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
-                  <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px">💬 Evaluación por chat</div>
-                  <div style="font-size:13px;color:var(--mid)">Escríbele directamente. Define el problema y el técnico te cotiza.</div>
-                </div>
-                ${ev.mode === "chat" ? `<span style="font-size:20px;color:var(--navy)">✓</span>` : ""}
-              </div>
-            </button>` : ""}
-          ${tech.evaluationModes.includes("presencial") ? `
-            <button class="mode-opt ${ev.mode === "presencial" ? "selected" : ""}" data-mode="presencial">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
-                  <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px">📅 Visita presencial</div>
-                  <div style="font-size:13px;color:var(--mid)">El técnico va a tu domicilio a revisar el equipo en persona.</div>
-                </div>
-                ${ev.mode === "presencial" ? `<span style="font-size:20px;color:var(--navy)">✓</span>` : ""}
-              </div>
-            </button>` : ""}
-        </div>
-
-        <button style="margin-top:24px;width:100%;padding:14px;font-size:15px;background:${!ev.mode ? "var(--border)" : "var(--navy)"};color:${!ev.mode ? "var(--muted)" : "white"};border-radius:var(--rs);border:none;font-family:var(--fb);font-weight:700;cursor:${ev.mode ? "pointer" : "default"}" data-eval-continue ${!ev.mode ? "disabled" : ""}>
-          Continuar →
-        </button>
-      </div>`;
-  } else if (ev.step === 2) {
-    stepHTML = `
-      <div>
-        <h2 style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Chat con ${esc(tech.name.split(" ")[0])}</h2>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Describe el problema y acuerda el diagnóstico aquí.</p>
-        <div id="chatLog" style="background:var(--bg-warm);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:14px;min-height:200px;display:flex;flex-direction:column;gap:12px">
-          ${ChatLogHTML(tech)}
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:14px">
-          <input class="inp" id="chatInput" placeholder="Escribe un mensaje...">
-          <button class="btn btn-navy" style="flex-shrink:0;padding:12px 16px" data-chat-send>Enviar</button>
-        </div>
-        <div class="alert al-info" style="margin-bottom:14px">💡 Cuando estén de acuerdo, el técnico te enviará el presupuesto formal desde su perfil.</div>
-        <button class="btn btn-amber full" style="padding:13px" data-eval-jump="4">Terminar evaluación y ver presupuesto →</button>
-      </div>`;
-  } else if (ev.step === 3 && !ev.booked) {
-    stepHTML = `
-      <div>
-        <h2 style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Agendar visita presencial</h2>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Elige el día y hora. Se creará una actividad pendiente para ambos.</p>
-        <div style="display:flex;flex-direction:column;gap:16px">
-          <div><label class="lbl">Fecha *</label><input class="inp" type="date" id="schedDate" min="${new Date().toISOString().split("T")[0]}"></div>
-          <div><label class="lbl">Hora *</label>
-            <select class="sel" id="schedTime">
-              <option value="">Selecciona una hora...</option>
-              ${["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"].map(h => `<option value="${h}">${h} hrs</option>`).join("")}
-            </select>
-          </div>
-          <div><label class="lbl">Dirección *</label><input class="inp" id="schedAddress" placeholder="Ej. Calle Sinaloa 204, Col. Centro"></div>
-          <div class="fbox">
-            <div class="fr"><span>Precio del técnico</span><span style="font-weight:700;color:${free ? "var(--green)" : "var(--navy)"}">${free ? "Gratis" : fmt(tech.evaluationPrice)}</span></div>
-            <div class="fr" style="color:var(--amber)"><span>Tarifa TUCADI</span><span>${fmt(PLATFORM_FEE_EVAL)}</span></div>
-            <div class="fr-total"><span>Total a pagar</span><span>${fmt(evalTotal)}</span></div>
-          </div>
-          <button class="btn btn-amber full" style="padding:14px;font-size:15px" data-schedule-confirm>
-            Confirmar cita y pagar ${fmt(evalTotal)}
-          </button>
-        </div>
-      </div>`;
-  } else if (ev.step === 3 && ev.booked) {
-    stepHTML = `
-      <div style="text-align:center;padding-top:8px">
-        <div style="font-size:52px;margin-bottom:14px">📅</div>
-        <h2 style="font-family:var(--fd);font-size:22px;font-weight:700;color:var(--navy);margin-bottom:10px">¡Cita confirmada!</h2>
-        <p style="font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:22px">
-          ${esc(tech.name.split(" ")[0])} llegará el <strong>${esc(ev.date)}</strong> a las <strong>${esc(ev.time)} hrs</strong>.<br>
-          Se creó una actividad pendiente en tu cuenta y en la del técnico.
-        </p>
-        <div class="acard" style="text-align:left;margin-bottom:20px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-            <div>
-              <div style="font-size:11px;font-weight:700;color:var(--amber);letter-spacing:1px;text-transform:uppercase">Actividad pendiente</div>
-              <div style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-top:4px">Evaluación presencial</div>
-            </div>
-            <span class="badge b-amber">Pendiente</span>
-          </div>
-          ${[["🧑‍🔧", tech.name], ["📅", `${ev.date} · ${ev.time} hrs`], ["📍", ev.address], ["💳", `Evaluación: ${fmt(evalTotal)} (pagado)`]].map(([icon, val]) => `
-            <div style="font-size:13px;color:var(--mid);margin-bottom:6px;display:flex;gap:8px">
-              <span>${icon}</span><span>${esc(val)}</span>
-            </div>`).join("")}
-        </div>
-        <div class="alert al-info" style="text-align:left;margin-bottom:18px">💡 Después de la visita, el técnico te enviará el presupuesto. Podrás aceptarlo y pagar desde la app.</div>
-        <button class="btn btn-navy full" style="padding:14px" data-nav="profile" data-id="${tech.id}">Ver perfil del técnico</button>
-      </div>`;
-  } else if (ev.step === 4) {
-    stepHTML = `
-      <div>
-        <h2 style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Presupuesto del técnico</h2>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:18px">Basado en la evaluación por chat, ${esc(tech.name.split(" ")[0])} propone:</p>
-        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px">
-          ${tech.jobs.map(j => {
-            const sel = ev.selectedJob === j.id;
-            return `
-            <div class="job-row ${sel ? "selected" : ""}" data-toggle-job="${j.id}" data-job-ctx="eval">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-                <div style="flex:1">
-                  <div style="font-weight:700;font-size:15px;color:var(--navy)">${esc(j.name)}</div>
-                  <div style="font-size:13px;color:var(--mid);margin-top:3px">${esc(j.desc)}</div>
-                </div>
-                <div style="text-align:right;flex-shrink:0">
-                  <div style="font-family:var(--fd);font-weight:800;font-size:17px;color:var(--navy)">${fmt(j.price)}</div>
-                  <div style="font-size:11px;color:var(--muted)">técnico recibe ${fmt(Math.round(j.price * (1 - TUCADI_FEE_PCT)))}</div>
-                </div>
-              </div>
-              ${sel ? `
-                <div style="margin-top:12px">
-                  <div class="fbox" style="margin-bottom:12px">
-                    <div class="fr"><span>Precio del trabajo</span><span style="font-weight:700">${fmt(j.price)}</span></div>
-                    <div class="fr"><span>Comisión TUCADI (10%)</span><span>- ${fmt(Math.round(j.price * TUCADI_FEE_PCT))}</span></div>
-                    <div class="fr"><span>Retención</span><span>${RETENTION_DAYS} días</span></div>
-                    <div class="fr-tech"><span>🟢 Técnico recibe</span><span>${fmt(Math.round(j.price * (1 - TUCADI_FEE_PCT)))}</span></div>
-                  </div>
-                  <button class="btn btn-amber full" style="font-size:14px;padding:12px" data-nav="profile" data-id="${tech.id}">Aceptar y pagar ${fmt(j.price)} →</button>
-                </div>` : ""}
-            </div>`;
-          }).join("")}
-        </div>
-        <button class="btn btn-ghost full" data-nav="profile" data-id="${tech.id}">Ver todos los servicios del técnico</button>
-      </div>`;
-  }
+  const selectedJob = tech.jobs.find(j => j.id === S.request.selectedJob) || null;
 
   return `
   <div>
@@ -779,21 +578,6 @@ function EvalHTML() {
     <div style="padding:24px 16px 56px">
       <div class="con" style="max-width:540px">
 
-        <div class="strack">
-          ${labels.map((lbl, i) => {
-            const idx = i + 1;
-            const cls = stepDotClass(ev.step, idx);
-            return `
-            <div style="display:flex;align-items:center;flex:${i < 2 ? "1" : "none"}">
-              <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-                <div class="sdot ${cls}">${cls === "sd-done" ? "✓" : idx}</div>
-                <div style="font-size:11px;color:${cls === "sd-active" ? "var(--amber)" : "var(--muted)"};font-weight:600;white-space:nowrap">${lbl}</div>
-              </div>
-              ${i < 2 ? `<div class="sline${cls === "sd-done" ? " sl-done" : ""}" style="margin-bottom:20px"></div>` : ""}
-            </div>`;
-          }).join("")}
-        </div>
-
         <div style="display:flex;gap:14px;align-items:center;margin-bottom:24px;background:var(--bg-warm);border-radius:var(--rs);padding:14px 16px;border:1px solid var(--border)">
           <div class="av" style="background:${tech.avatarColor}">${tech.avatar}</div>
           <div>
@@ -802,18 +586,42 @@ function EvalHTML() {
           </div>
         </div>
 
-        ${stepHTML}
+        <h2 style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--navy);margin-bottom:6px">Cuéntanos qué necesitas</h2>
+        <p style="font-size:14px;color:var(--mid);margin-bottom:20px;line-height:1.6">Arma tu solicitud y te conectamos directo por WhatsApp con ${esc(tech.name.split(" ")[0])}.</p>
+
+        <label class="lbl">¿Qué tipo de servicio necesitas? (opcional)</label>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+          ${tech.jobs.map(j => {
+            const sel = S.request.selectedJob === j.id;
+            return `
+            <div class="job-row ${sel ? "selected" : ""}" data-toggle-request-job="${j.id}">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+                <div style="flex:1">
+                  <div style="font-weight:700;font-size:15px;color:var(--navy)">${esc(j.name)}</div>
+                  <div style="font-size:13px;color:var(--mid);margin-top:3px">${esc(j.desc)}</div>
+                </div>
+                <div style="font-family:var(--fd);font-weight:800;font-size:15px;color:var(--navy);flex-shrink:0">${fmt(j.price)}</div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:-12px;margin-bottom:20px">Precio de referencia del técnico. Lo confirman entre ustedes por WhatsApp.</p>
+
+        <label class="lbl">Describe el problema (opcional, pero ayuda)</label>
+        <textarea class="inp" id="reqDesc" placeholder="Ej. El aire enciende pero no enfría" style="margin-bottom:20px"></textarea>
+
+        <button class="btn btn-wa-lg" data-wa-contact="${tech.id}">${WA_SVG} Contactar por WhatsApp</button>
+        <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px">Fase de prueba: por ahora TUCADI no cobra nada. Coordinas el trabajo directo con el técnico.</p>
       </div>
     </div>
   </div>`;
 }
 
-// ─── PROFILE PAGE ─────────────────────────────────────────────────────────────
+// ─── PROFILE PAGE ────────────────────────────────────────────────────────────────
 function ProfileHTML() {
   const tech = TECHNICIANS.find(t => t.id === S.eid);
   if (!tech) return "";
   const reviews = REVIEWS[tech.id] || [];
-  const free = tech.evaluationPrice === 0;
   const selJob = S.profile.selJob;
 
   return `
@@ -836,7 +644,7 @@ function ProfileHTML() {
             </div>
             <div style="font-size:13px;color:var(--mid)">📍 ${esc(tech.zone)}</div>
           </div>
-          <button class="btn btn-amber hide-mobile" data-nav="eval" data-id="${tech.id}">Solicitar evaluación</button>
+          <button class="btn btn-amber hide-mobile" data-nav="eval" data-id="${tech.id}">Solicitar</button>
         </div>
       </div>
     </div>
@@ -846,48 +654,23 @@ function ProfileHTML() {
         <div style="display:grid;grid-template-columns:1fr 290px;gap:24px;align-items:start" id="profileGrid">
           <div>
             <div class="card-flat" style="padding:18px 20px;margin-bottom:16px">
-              <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:12px">Evaluación</h2>
-              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-                <div>
-                  <div style="font-size:22px;font-weight:800;font-family:var(--fd);color:${free ? "var(--green)" : "var(--navy)"}">${free ? "Gratis" : fmt(tech.evaluationPrice)}</div>
-                  <div style="font-size:12px;color:var(--amber);font-weight:600;margin-top:3px">+ ${fmt(PLATFORM_FEE_EVAL)} tarifa de plataforma TUCADI</div>
-                </div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  ${tech.evaluationModes.includes("chat") ? `<span class="badge b-blue">💬 Chat</span>` : ""}
-                  ${tech.evaluationModes.includes("presencial") ? `<span class="badge b-navy">📅 En persona</span>` : ""}
-                </div>
-              </div>
-              <p style="font-size:12px;color:var(--muted);margin-top:10px">La tarifa de plataforma TUCADI (${fmt(PLATFORM_FEE_EVAL)}) siempre aplica. El precio del técnico le corresponde íntegro a él.</p>
-            </div>
-
-            <div class="card-flat" style="padding:18px 20px;margin-bottom:16px">
-              <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:4px">Trabajos y precios</h2>
-              <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Precios definidos por el técnico. TUCADI retiene ${RETENTION_DAYS} días y cobra 10% de comisión.</p>
+              <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:4px">Trabajos y precios de referencia</h2>
+              <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Precios definidos por el técnico. Se confirman directo con él por WhatsApp.</p>
               <div style="display:flex;flex-direction:column;gap:12px">
                 ${tech.jobs.map(j => {
-                  const techGets = Math.round(j.price * (1 - TUCADI_FEE_PCT));
                   const sel = selJob === j.id;
                   return `
-                  <div class="job-row ${sel ? "selected" : ""}" data-toggle-job="${j.id}" data-job-ctx="profile">
+                  <div class="job-row ${sel ? "selected" : ""}" data-toggle-job="${j.id}">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
                       <div style="flex:1">
                         <div style="font-weight:700;font-size:15px;color:var(--navy)">${esc(j.name)}</div>
                         <div style="font-size:13px;color:var(--mid);margin-top:3px;line-height:1.5">${esc(j.desc)}</div>
                       </div>
-                      <div style="text-align:right;flex-shrink:0">
-                        <div style="font-family:var(--fd);font-weight:800;font-size:17px;color:var(--navy)">${fmt(j.price)}</div>
-                        <div style="font-size:11px;color:var(--muted)">técnico recibe ${fmt(techGets)}</div>
-                      </div>
+                      <div style="font-family:var(--fd);font-weight:800;font-size:17px;color:var(--navy);flex-shrink:0">${fmt(j.price)}</div>
                     </div>
                     ${sel ? `
                       <div style="margin-top:12px">
-                        <div class="fbox" style="margin-bottom:12px">
-                          <div class="fr"><span>Precio del trabajo</span><span style="font-weight:700">${fmt(j.price)}</span></div>
-                          <div class="fr"><span>Comisión TUCADI (10%)</span><span>- ${fmt(Math.round(j.price * TUCADI_FEE_PCT))}</span></div>
-                          <div class="fr"><span>Retención</span><span>${RETENTION_DAYS} días</span></div>
-                          <div class="fr-tech"><span>🟢 Técnico recibe</span><span>${fmt(techGets)}</span></div>
-                        </div>
-                        <button class="btn btn-amber full" style="font-size:14px;padding:12px" data-nav="eval" data-id="${tech.id}">Contratar este servicio →</button>
+                        <button class="btn btn-amber full" style="font-size:14px;padding:12px" data-nav="eval" data-id="${tech.id}">Solicitar este servicio →</button>
                       </div>` : ""}
                   </div>`;
                 }).join("")}
@@ -922,15 +705,15 @@ function ProfileHTML() {
           <div class="hide-mobile" style="position:sticky;top:76px">
             <div class="card" style="padding:22px">
               <h3 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px">¿Listo para empezar?</h3>
-              <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">Primero agenda una evaluación. Sin compromiso.</p>
-              <button class="btn btn-amber full" style="margin-bottom:10px" data-nav="eval" data-id="${tech.id}">Solicitar evaluación</button>
+              <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">Arma tu solicitud y contacta directo al técnico. Sin costo por ahora.</p>
+              <button class="btn btn-amber full" style="margin-bottom:10px" data-nav="eval" data-id="${tech.id}">Solicitar</button>
               <a href="https://wa.me/52${tech.phone}" target="_blank" rel="noopener noreferrer" class="btn btn-wa-lg">${WA_SVG} WhatsApp directo</a>
               <div class="divider"></div>
               <div style="display:flex;flex-direction:column;gap:10px">
-                ${[["Evaluación (técnico)", free ? "Gratis" : fmt(tech.evaluationPrice)], ["Tarifa TUCADI", fmt(PLATFORM_FEE_EVAL)], ["Total evaluación", fmt(tech.evaluationPrice + PLATFORM_FEE_EVAL)], ["Comisión TUCADI","10% del trabajo"], ["Retención del pago",`${RETENTION_DAYS} días`], ["Zona", tech.zone]].map(([l, v]) => `
-                  <div style="display:flex;justify-content:space-between;font-size:13px">
+                ${[["Servicios", tech.services.join(", ")], ["Zona", tech.zone], ["Experiencia", tech.experienceYears + " años"]].map(([l, v]) => `
+                  <div style="display:flex;justify-content:space-between;font-size:13px;gap:10px">
                     <span style="color:var(--muted)">${l}</span>
-                    <span style="font-weight:600;color:var(--navy);text-align:right;max-width:150px">${esc(v)}</span>
+                    <span style="font-weight:600;color:var(--navy);text-align:right;max-width:160px">${esc(v)}</span>
                   </div>`).join("")}
               </div>
             </div>
@@ -942,14 +725,14 @@ function ProfileHTML() {
     <div class="wafloat">
       <div style="flex:1">
         <div style="font-weight:600;font-size:14px;color:var(--navy)">${esc(tech.name)}</div>
-        <div style="font-size:12px;color:var(--muted)">Eval: ${free ? "Gratis" : fmt(tech.evaluationPrice)} + ${fmt(PLATFORM_FEE_EVAL)} TUCADI = ${fmt(tech.evaluationPrice + PLATFORM_FEE_EVAL)}</div>
+        <div style="font-size:12px;color:var(--muted)">Contacto directo, sin costo de plataforma</div>
       </div>
       <button class="btn btn-amber" style="flex-shrink:0;padding:12px 18px;font-size:14px" data-nav="eval" data-id="${tech.id}">Solicitar →</button>
     </div>
   </div>`;
 }
 
-// ─── SIGNUP PAGE ──────────────────────────────────────────────────────────────
+// ─── SIGNUP PAGE ─────────────────────────────────────────────────────────────────
 function SignupHTML() {
   if (S.signup.done) {
     return `
@@ -963,8 +746,8 @@ function SignupHTML() {
   }
 
   const svcs = ["Instalación", "Reparación", "Mantenimiento"];
-  const zoneOpts = ["Centro / Pitic","Villa del Real / Perisur","Lomas de Hermosillo / Bugambilias","San Benito / Proyecto Río","Colonia Prados / Bachoco","Periférico / Solidaridad","Toda la ciudad"];
-  const expOpts = ["1 año","2–3 años","4–6 años","7–10 años","Más de 10 años"];
+  const zoneOpts = ["Centro / Pitic", "Villa del Real / Perisur", "Lomas de Hermosillo / Bugambilias", "San Benito / Proyecto Río", "Colonia Prados / Bachoco", "Periférico / Solidaridad", "Toda la ciudad"];
+  const expOpts = ["1 año", "2–3 años", "4–6 años", "7–10 años", "Más de 10 años"];
 
   return `
   <div>
@@ -972,33 +755,19 @@ function SignupHTML() {
       <div class="con" style="max-width:580px">
         <span class="badge b-green" style="margin-bottom:12px">✓ Registro gratuito</span>
         <h1 style="font-family:var(--fd);font-size:clamp(22px,4vw,32px);font-weight:700;color:var(--navy);margin-bottom:8px">Únete a TUCADI como técnico</h1>
-        <p style="font-size:14px;color:var(--mid);line-height:1.7">Tú defines los precios. TUCADI te trae los clientes y protege los pagos.</p>
+        <p style="font-size:14px;color:var(--mid);line-height:1.7">Tú defines los precios. TUCADI te trae clientes reales que buscan a alguien de confianza.</p>
       </div>
     </div>
 
     <div style="padding:20px 16px 56px">
       <div class="con" style="max-width:580px">
-        <div class="fbox" style="margin-bottom:20px">
-          <p style="font-weight:700;color:var(--navy);margin-bottom:10px;font-size:14px">📋 Modelo para el técnico:</p>
-          <div class="fr"><span>Evaluación (precio que tú definas)</span><span style="color:var(--green)">100% tuyo</span></div>
-          <div class="fr" style="color:var(--amber)"><span>Tarifa TUCADI (siempre, la paga el cliente)</span><span>${fmt(PLATFORM_FEE_EVAL)}</span></div>
-          <div class="fr"><span>Comisión TUCADI por trabajo</span><span style="font-weight:700">10%</span></div>
-          <div class="fr-tech"><span>Tú recibes por cada trabajo</span><span>90% · liberado en 7 días</span></div>
-        </div>
+        <div class="alert al-info" style="margin-bottom:20px">💡 Estamos en fase de prueba: registro gratis, sin comisión ni fee. Solo queremos validar si el modelo te sirve antes de construir esa parte.</div>
 
         <form class="card-flat" style="padding:22px 18px" id="signupForm">
           <div style="display:flex;flex-direction:column;gap:16px">
             <div><label class="lbl">Nombre completo *</label><input class="inp" placeholder="Ej. Carlos Mendoza" required name="name"></div>
             <div><label class="lbl">Nombre del negocio</label><input class="inp" placeholder="Opcional" name="business"></div>
             <div><label class="lbl">WhatsApp / Teléfono *</label><input class="inp" placeholder="662-XXX-XXXX" required type="tel" name="phone"></div>
-            <div>
-              <label class="lbl">Precio de evaluación que cobrarás</label>
-              <div style="position:relative">
-                <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)">$</span>
-                <input class="inp" style="padding-left:28px" type="number" min="0" placeholder="0 si es gratis" name="evalPrice">
-              </div>
-              <p style="font-size:12px;color:var(--amber);margin-top:6px">El cliente siempre paga +${fmt(PLATFORM_FEE_EVAL)} de tarifa TUCADI encima de tu precio. Ese monto no te corresponde a ti.</p>
-            </div>
             <div>
               <label class="lbl">Años de experiencia *</label>
               <select class="sel" required name="experience">
@@ -1029,14 +798,14 @@ function SignupHTML() {
   </div>`;
 }
 
-// ─── APP RENDER ───────────────────────────────────────────────────────────────
+// ─── APP RENDER ──────────────────────────────────────────────────────────────────
 function pageHTML() {
   switch (S.page) {
     case "home": return HomeHTML();
     case "how": return HowHTML();
     case "list": return ListHTML();
     case "profile": return ProfileHTML();
-    case "eval": return EvalHTML();
+    case "eval": return RequestHTML();
     case "signup": return SignupHTML();
     default: return HomeHTML();
   }
@@ -1047,25 +816,13 @@ function renderApp() {
   root.innerHTML = `${NavHTML()}<main>${pageHTML()}</main>${FooterHTML()}`;
 }
 
-// ─── PARTIAL UPDATES ──────────────────────────────────────────────────────────
+// ─── PARTIAL UPDATES ─────────────────────────────────────────────────────────────
 function updateTechResults() {
   const el = document.getElementById("techResults");
   if (el) el.innerHTML = TechResultsHTML();
-  // update filter badge count without full rerender
-  const btn = document.querySelector("[data-filter-toggle]");
-  if (btn) {
-    const existingBadge = btn.querySelector("span");
-    const active = [S.list.svc, S.list.zone, S.list.rating].filter(Boolean).length;
-    if (existingBadge) existingBadge.textContent = active > 0 ? active : "";
-  }
 }
 
-function scrollChatToBottom() {
-  const log = document.getElementById("chatLog");
-  if (log) log.scrollTop = log.scrollHeight;
-}
-
-// ─── EVENT DELEGATION ─────────────────────────────────────────────────────────
+// ─── EVENT DELEGATION ────────────────────────────────────────────────────────────
 document.addEventListener("click", (e) => {
   const navEl = e.target.closest("[data-nav]");
   if (navEl) {
@@ -1075,71 +832,30 @@ document.addEventListener("click", (e) => {
     return;
   }
 
-  const modeEl = e.target.closest("[data-mode]");
-  if (modeEl) {
-    S.evalState.mode = modeEl.getAttribute("data-mode");
+  const reqJobEl = e.target.closest("[data-toggle-request-job]");
+  if (reqJobEl) {
+    const jobId = reqJobEl.getAttribute("data-toggle-request-job");
+    S.request.selectedJob = S.request.selectedJob === jobId ? null : jobId;
     renderApp();
-    return;
-  }
-
-  const continueEl = e.target.closest("[data-eval-continue]");
-  if (continueEl) {
-    if (!S.evalState.mode) return;
-    S.evalState.step = S.evalState.mode === "chat" ? 2 : 3;
-    renderApp();
-    return;
-  }
-
-  const jumpEl = e.target.closest("[data-eval-jump]");
-  if (jumpEl) {
-    S.evalState.step = parseInt(jumpEl.getAttribute("data-eval-jump"), 10);
-    renderApp();
-    return;
-  }
-
-  const sendEl = e.target.closest("[data-chat-send]");
-  if (sendEl) {
-    const input = document.getElementById("chatInput");
-    if (!input || !input.value.trim()) return;
-    const msg = input.value;
-    input.value = "";
-    S.evalState.chatLog.push({ from: "me", text: msg });
-    const tech = TECHNICIANS.find(t => t.id === S.eid);
-    const log = document.getElementById("chatLog");
-    if (log) { log.innerHTML = ChatLogHTML(tech); scrollChatToBottom(); }
-    setTimeout(() => {
-      S.evalState.chatLog.push({ from: "tech", text: "Entendido. Con base en lo que describes, puedo darte un diagnóstico aquí mismo o ir a revisarlo en persona. Una vez evaluado te envío el presupuesto formal." });
-      const log2 = document.getElementById("chatLog");
-      if (log2) { log2.innerHTML = ChatLogHTML(tech); scrollChatToBottom(); }
-    }, 900);
-    return;
-  }
-
-  const scheduleEl = e.target.closest("[data-schedule-confirm]");
-  if (scheduleEl) {
-    const date = document.getElementById("schedDate")?.value || "";
-    const time = document.getElementById("schedTime")?.value || "";
-    const address = document.getElementById("schedAddress")?.value || "";
-    if (date && time && address) {
-      S.evalState.date = date;
-      S.evalState.time = time;
-      S.evalState.address = address;
-      S.evalState.booked = true;
-      renderApp();
-    }
     return;
   }
 
   const toggleJobEl = e.target.closest("[data-toggle-job]");
   if (toggleJobEl) {
     const jobId = toggleJobEl.getAttribute("data-toggle-job");
-    const ctx = toggleJobEl.getAttribute("data-job-ctx");
-    if (ctx === "eval") {
-      S.evalState.selectedJob = S.evalState.selectedJob === jobId ? null : jobId;
-    } else {
-      S.profile.selJob = S.profile.selJob === jobId ? null : jobId;
-    }
+    S.profile.selJob = S.profile.selJob === jobId ? null : jobId;
     renderApp();
+    return;
+  }
+
+  const waContactEl = e.target.closest("[data-wa-contact]");
+  if (waContactEl) {
+    const techId = parseInt(waContactEl.getAttribute("data-wa-contact"), 10);
+    const tech = TECHNICIANS.find(t => t.id === techId);
+    if (!tech) return;
+    const job = tech.jobs.find(j => j.id === S.request.selectedJob) || null;
+    const desc = document.getElementById("reqDesc")?.value || "";
+    window.open(buildWaLink(tech, job, desc), "_blank", "noopener");
     return;
   }
 
@@ -1188,13 +904,7 @@ document.addEventListener("submit", (e) => {
   }
 });
 
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && e.target.id === "chatInput") {
-    document.querySelector("[data-chat-send]")?.click();
-  }
-});
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ─── INIT ────────────────────────────────────────────────────────────────────────
 renderApp();
 </script>
 </body>
