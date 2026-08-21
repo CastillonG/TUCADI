@@ -119,8 +119,28 @@
 <body>
 <div id="root"></div>
 
-<script>
+<script type="module">
 "use strict";
+
+// ─── FIREBASE ───────────────────────────────────────────────────────────────────
+// Mismo patrón que Pasaporte del Café / COSMAQ: SDK modular vía CDN, sin npm,
+// porque este es un solo archivo HTML servido desde GitHub Pages.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCoWvjIFFQOevNue6Aw8qDOhesL_QCcazw",
+  authDomain: "tucadi.firebaseapp.com",
+  projectId: "tucadi",
+  storageBucket: "tucadi.firebasestorage.app",
+  messagingSenderId: "557772719164",
+  appId: "1:557772719164:web:ba42f7edc961f55205af39",
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
 
 // ─── FASE ACTUAL: VALIDACIÓN, SIN COSTO ────────────────────────────────────────
 // TUCADI no cobra fee de plataforma ni comisión todavía. El objetivo de esta
@@ -896,11 +916,35 @@ document.addEventListener("change", (e) => {
   if (e.target.matches("[data-list-rating]")) { S.list.rating = e.target.value; renderApp(); }
 });
 
-document.addEventListener("submit", (e) => {
-  if (e.target.id === "signupForm") {
-    e.preventDefault();
+document.addEventListener("submit", async (e) => {
+  if (e.target.id !== "signupForm") return;
+  e.preventDefault();
+
+  const form = e.target;
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const selectedServices = Array.from(form.querySelectorAll("[data-service-toggle].selected"))
+    .map(b => b.getAttribute("data-service-toggle"));
+
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Enviando..."; }
+
+  try {
+    await addDoc(collection(db, "tecnicos"), {
+      name: form.name.value.trim(),
+      business: form.business.value.trim(),
+      phone: form.phone.value.trim(),
+      experience: form.experience.value,
+      services: selectedServices,
+      zone: form.zone.value,
+      description: form.description.value.trim(),
+      status: "pendiente", // lo revisas manualmente antes de activarlo en la lista
+      createdAt: serverTimestamp(),
+    });
     S.signup.done = true;
     renderApp();
+  } catch (err) {
+    console.error("Error guardando registro en Firestore:", err);
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Enviar solicitud →"; }
+    alert("No se pudo enviar tu registro. Revisa tu conexión e intenta de nuevo.");
   }
 });
 
