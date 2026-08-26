@@ -114,6 +114,21 @@
 
   #root{min-height:100vh;display:flex;flex-direction:column}
   main{flex:1}
+
+  /* ─── LOGIN GATE ─── */
+  .login-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,var(--navy) 0%,#1e3a5f 100%)}
+  .login-card{background:white;border-radius:16px;padding:40px 32px;max-width:380px;width:100%;text-align:center;box-shadow:var(--shadow-lg)}
+  .login-logo{font-family:var(--fd);font-size:28px;font-weight:700;color:var(--navy);margin-bottom:6px}
+  .login-logo span{color:var(--amber)}
+  .btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 20px;font-size:15px;font-weight:600;color:var(--text);background:white;border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .15s}
+  .btn-google:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(15,37,64,.1)}
+  .btn-google[aria-disabled="true"]{opacity:.6;pointer-events:none}
+  .user-chip{display:flex;align-items:center;gap:8px;cursor:pointer;background:none;border:none;padding:4px 6px;border-radius:20px}
+  .user-chip:hover{background:var(--bg-warm)}
+  .user-chip img{width:28px;height:28px;border-radius:50%}
+  .user-menu{position:absolute;top:48px;right:0;background:white;border:1px solid var(--border);border-radius:var(--rs);box-shadow:var(--shadow-lg);min-width:180px;z-index:110;overflow:hidden}
+  .user-menu button{width:100%;text-align:left;padding:11px 14px;font-size:13px;background:none;border:none;cursor:pointer;color:var(--mid)}
+  .user-menu button:hover{background:var(--bg-warm);color:var(--navy)}
 </style>
 </head>
 <body>
@@ -123,12 +138,13 @@
 "use strict";
 
 // ─── FIREBASE ───────────────────────────────────────────────────────────────────
-// Mismo patrón que Pasaporte del Café / COSMAQ: SDK modular vía CDN, sin npm,
-// porque este es un solo archivo HTML servido desde GitHub Pages.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut,
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCoWvjIFFQOevNue6Aw8qDOhesL_QCcazw",
@@ -141,13 +157,10 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
+const auth = getAuth(firebaseApp);
+const googleProvider = new GoogleAuthProvider();
 
 // ─── FASE ACTUAL: VALIDACIÓN, SIN COSTO ────────────────────────────────────────
-// TUCADI no cobra fee de plataforma ni comisión todavía. El objetivo de esta
-// versión es medir si el loop solicitud → contacto → servicio funciona.
-// El cierre del trato (cotización, pago, fecha) ocurre directo entre cliente
-// y técnico por WhatsApp — ese lado aún no vive dentro de la app.
-
 const fmt = (n) => `$${Number(n).toLocaleString("es-MX")} MXN`;
 const esc = (s) => { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; };
 
@@ -169,8 +182,6 @@ const CATEGORIES = [
 ];
 
 // ─── MOCK DATA ──────────────────────────────────────────────────────────────────
-// El precio en cada job es el precio del técnico. No hay fee ni comisión encima
-// mientras estemos en fase de validación.
 const TECHNICIANS = [
   {
     id: 1, name: "Carlos Mendoza", rating: 4.9, reviewCount: 47, experienceYears: 12,
@@ -243,10 +254,8 @@ const REVIEWS = {
 };
 
 const WA_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
+const GOOGLE_SVG = `<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.79 2.73v2.27h2.9c1.7-1.56 2.68-3.87 2.68-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.27c-.81.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.34C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.95 10.69A5.4 5.4 0 013.68 9c0-.59.1-1.16.27-1.69V4.97H.96A9 9 0 000 9c0 1.45.35 2.83.96 4.03l2.99-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.97l2.99 2.34C4.66 5.17 6.65 3.58 9 3.58z"/></svg>`;
 
-// ─── WHATSAPP MESSAGE BUILDER ───────────────────────────────────────────────────
-// Genera el link wa.me con el mensaje ya armado, para que el cliente solo
-// tenga que darle "enviar" y el técnico reciba contexto completo.
 function buildWaLink(tech, job, description) {
   const lines = [`Hola ${tech.name.split(" ")[0]}, te contacto desde TUCADI.`];
   if (job) lines.push(`Me interesa: ${job.name} (referencia ${fmt(job.price)}).`);
@@ -264,6 +273,7 @@ const S = {
   request: { selectedJob: null },
   profile: { selJob: null },
   signup: { done: false },
+  auth: { user: null, loading: true, signingIn: false, error: "", menuOpen: false },
 };
 
 function nav(target, id) {
@@ -275,15 +285,76 @@ function nav(target, id) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// ─── AUTH ────────────────────────────────────────────────────────────────────────
+async function doGoogleSignIn() {
+  S.auth.signingIn = true;
+  S.auth.error = "";
+  renderApp();
+  try {
+    await signInWithPopup(auth, googleProvider);
+    // onAuthStateChanged se encarga de actualizar S.auth.user y re-renderizar
+  } catch (err) {
+    console.error("Error de inicio de sesión con Google:", err);
+    S.auth.signingIn = false;
+    S.auth.error = "No se pudo iniciar sesión. Intenta de nuevo.";
+    renderApp();
+  }
+}
+
+async function doSignOut() {
+  await signOut(auth);
+}
+
+onAuthStateChanged(auth, (user) => {
+  S.auth.user = user;
+  S.auth.loading = false;
+  S.auth.signingIn = false;
+  renderApp();
+});
+
+function LoginGateHTML() {
+  return `
+  <div class="login-gate">
+    <div class="login-card">
+      <div class="login-logo">TUCA<span>DI</span></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px">Técnicos locales de confianza · Hermosillo</p>
+      <p style="font-size:14px;color:var(--mid);margin-bottom:22px;line-height:1.6">Inicia sesión para ver técnicos, solicitar servicios y guardar tus favoritos.</p>
+      ${S.auth.error ? `<div class="alert al-warn" style="margin-bottom:16px">${esc(S.auth.error)}</div>` : ""}
+      <button class="btn-google" id="googleSignInBtn" aria-disabled="${S.auth.signingIn}">
+        ${GOOGLE_SVG} ${S.auth.signingIn ? "Conectando..." : "Iniciar sesión con Google"}
+      </button>
+      <p style="font-size:11px;color:var(--muted);margin-top:18px">Al continuar aceptas usar tu cuenta de Google solo para identificarte en TUCADI.</p>
+    </div>
+  </div>`;
+}
+
 // ─── SHARED PIECES ───────────────────────────────────────────────────────────────
 function NavHTML() {
+  const user = S.auth.user;
+  const userBlock = user ? `
+    <div style="position:relative">
+      <button class="user-chip" id="userMenuBtn">
+        <img src="${user.photoURL || ""}" alt="${esc(user.displayName || "")}" onerror="this.style.display='none'">
+        <span class="hide-mobile" style="font-size:13px;font-weight:600;color:var(--navy)">${esc((user.displayName || "").split(" ")[0] || "Cuenta")}</span>
+      </button>
+      ${S.auth.menuOpen ? `
+        <div class="user-menu">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(user.displayName || "")}</div>
+            <div style="font-size:12px;color:var(--muted)">${esc(user.email || "")}</div>
+          </div>
+          <button id="signOutBtn">Cerrar sesión</button>
+        </div>` : ""}
+    </div>` : "";
+
   return `
   <nav class="nav"><div class="nav-in">
     <button class="logo" data-nav="home">TUCA<span>DI</span></button>
-    <div class="nl">
+    <div class="nl" style="align-items:center">
       <button class="nlink" data-nav="list">Técnicos</button>
       <button class="nlink" data-nav="how">¿Cómo funciona?</button>
       <button class="ncta" data-nav="signup">Soy técnico</button>
+      ${userBlock}
     </div>
   </div></nav>`;
 }
@@ -580,10 +651,7 @@ function ListHTML() {
   </div>`;
 }
 
-// ─── SOLICITAR (antes "eval") ────────────────────────────────────────────────────
-// Un solo paso: el cliente elige (opcional) un servicio de referencia, describe
-// el problema, y manda todo directo al WhatsApp del técnico. Nada de precios de
-// plataforma ni pasos de pago — eso no existe en esta fase.
+// ─── SOLICITAR ────────────────────────────────────────────────────────────────
 function RequestHTML() {
   const tech = TECHNICIANS.find(t => t.id === S.eid);
   if (!tech) return "";
@@ -833,7 +901,25 @@ function pageHTML() {
 
 function renderApp() {
   const root = document.getElementById("root");
+
+  if (S.auth.loading) {
+    root.innerHTML = `<div class="login-gate"><div style="color:white;font-family:var(--fd);font-size:16px">Cargando…</div></div>`;
+    return;
+  }
+
+  if (!S.auth.user) {
+    root.innerHTML = LoginGateHTML();
+    const btn = document.getElementById("googleSignInBtn");
+    if (btn) btn.addEventListener("click", doGoogleSignIn);
+    return;
+  }
+
   root.innerHTML = `${NavHTML()}<main>${pageHTML()}</main>${FooterHTML()}`;
+
+  const menuBtn = document.getElementById("userMenuBtn");
+  if (menuBtn) menuBtn.addEventListener("click", (e) => { e.stopPropagation(); S.auth.menuOpen = !S.auth.menuOpen; renderApp(); });
+  const signOutBtn = document.getElementById("signOutBtn");
+  if (signOutBtn) signOutBtn.addEventListener("click", doSignOut);
 }
 
 // ─── PARTIAL UPDATES ─────────────────────────────────────────────────────────────
@@ -844,6 +930,11 @@ function updateTechResults() {
 
 // ─── EVENT DELEGATION ────────────────────────────────────────────────────────────
 document.addEventListener("click", (e) => {
+  if (S.auth.menuOpen && !e.target.closest("#userMenuBtn") && !e.target.closest(".user-menu")) {
+    S.auth.menuOpen = false;
+    renderApp();
+  }
+
   const navEl = e.target.closest("[data-nav]");
   if (navEl) {
     const target = navEl.getAttribute("data-nav");
@@ -936,8 +1027,9 @@ document.addEventListener("submit", async (e) => {
       services: selectedServices,
       zone: form.zone.value,
       description: form.description.value.trim(),
-      status: "pendiente", // lo revisas manualmente antes de activarlo en la lista
+      status: "pendiente",
       createdAt: serverTimestamp(),
+      submittedBy: auth.currentUser ? auth.currentUser.uid : null,
     });
     S.signup.done = true;
     renderApp();
