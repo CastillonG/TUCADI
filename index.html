@@ -227,7 +227,7 @@ const EXP_OPTS = ["1 año", "2–3 años", "4–6 años", "7–10 años", "Más 
 // ─── MOCK DATA ──────────────────────────────────────────────────────────────────
 const TECHNICIANS = [
   {
-    id: 1, name: "Carlos Mendoza", rating: 4.9, reviewCount: 47, experienceYears: 12,
+    id: "m1", name: "Carlos Mendoza", rating: 4.9, reviewCount: 47, experienceYears: 12,
     services: ["Instalación", "Reparación", "Mantenimiento"],
     zone: "Centro / Pitic",
     description: "Técnico certificado con más de 12 años de experiencia en instalación y reparación de minisplits de todas las marcas. Trabajo garantizado, precios justos y atención el mismo día.",
@@ -239,7 +239,7 @@ const TECHNICIANS = [
     ],
   },
   {
-    id: 2, name: "Roberto Salazar", rating: 4.8, reviewCount: 31, experienceYears: 8,
+    id: "m2", name: "Roberto Salazar", rating: 4.8, reviewCount: 31, experienceYears: 8,
     services: ["Instalación", "Mantenimiento"],
     zone: "Villa del Real / Perisur",
     description: "Especialista en instalaciones residenciales y comerciales. Trabajo limpio, materiales de calidad y garantía de 6 meses en instalaciones nuevas.",
@@ -250,7 +250,7 @@ const TECHNICIANS = [
     ],
   },
   {
-    id: 3, name: "Jesús Félix", rating: 4.7, reviewCount: 28, experienceYears: 6,
+    id: "m3", name: "Jesús Félix", rating: 4.7, reviewCount: 28, experienceYears: 6,
     services: ["Reparación", "Mantenimiento"],
     zone: "Lomas de Hermosillo / Bugambilias",
     description: "Me especializo en diagnóstico y reparación de equipos. Reviso fallas eléctricas, problemas de refrigerante y mantenimiento preventivo. Respondo rápido por WhatsApp.",
@@ -261,7 +261,7 @@ const TECHNICIANS = [
     ],
   },
   {
-    id: 4, name: "Miguel Valenzuela", rating: 4.6, reviewCount: 19, experienceYears: 4,
+    id: "m4", name: "Miguel Valenzuela", rating: 4.6, reviewCount: 19, experienceYears: 4,
     services: ["Instalación", "Reparación"],
     zone: "San Benito / Proyecto Río",
     description: "Joven técnico con formación en refrigeración industrial. Trabajo con marcas LG, Samsung, Carrier y Daikin. Presupuesto sin costo.",
@@ -274,27 +274,63 @@ const TECHNICIANS = [
 ];
 
 const REVIEWS = {
-  1: [
+  m1: [
     { userName: "Ana G.", rating: 5, comment: "Excelente servicio, llegó puntual y dejó todo limpio. Lo recomiendo mucho." },
     { userName: "Luis R.", rating: 5, comment: "Resolvió el problema de mi minisplit en menos de una hora. Muy profesional." },
     { userName: "Patricia M.", rating: 4, comment: "Buen trabajo, precio justo. Solo tardó un poco más de lo esperado." },
     { userName: "Jorge A.", rating: 5, comment: "Ya es la tercera vez que lo contrato y siempre quedo satisfecho." },
   ],
-  2: [
+  m2: [
     { userName: "Sandra L.", rating: 5, comment: "Instaló dos equipos en mi casa, quedaron perfectos y muy ordenados los cables." },
     { userName: "Héctor N.", rating: 5, comment: "Muy responsable y puntual. Sabe lo que hace." },
     { userName: "Carmen V.", rating: 4, comment: "Buen precio y trabajo limpio. Lo volvería a contratar." },
   ],
-  3: [
+  m3: [
     { userName: "Ricardo P.", rating: 5, comment: "Diagnosticó el problema de mi equipo que otros no pudieron. 10/10." },
     { userName: "Mariana C.", rating: 4, comment: "Reparó mi split el mismo día que llamé. Muy eficiente." },
     { userName: "Eduardo S.", rating: 5, comment: "Sabe mucho de su trabajo, me explicó todo el proceso." },
   ],
-  4: [
+  m4: [
     { userName: "Fernanda O.", rating: 5, comment: "Joven muy profesional y honesto con los precios." },
     { userName: "Arturo M.", rating: 4, comment: "Instaló el equipo rápido y bien. Buena comunicación." },
   ],
 };
+
+const AVATAR_PALETTE = ["#1e3a5f", "#2d6a4f", "#7b3f00", "#4a1942", "#0f2540", "#8a3324"];
+function colorForName(name) {
+  let hash = 0;
+  for (let i = 0; i < (name || "").length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
+// Convierte un documento real de Firestore (técnico aprobado) al formato que
+// usan las vistas públicas (tarjeta, perfil, solicitar). Los técnicos reales
+// no tienen aún calificación ni trabajos con precio fijo — se muestran como
+// "Nuevo en TUCADI" y permiten solicitar cotización directa.
+function mapFirestoreTechToDisplayTech(id, d) {
+  return {
+    id,
+    name: d.name || "Técnico",
+    business: d.business || "",
+    rating: null,
+    reviewCount: 0,
+    experienceYears: null,
+    experienceLabel: d.experience || "",
+    services: d.services || [],
+    zone: (d.zones && d.zones[0]) || "",
+    zones: d.zones || [],
+    description: d.description || "",
+    phone: d.phone || "",
+    avatar: initialsOf(d.name),
+    avatarColor: colorForName(d.name || ""),
+    jobs: [],
+    isReal: true,
+  };
+}
+
+function allTechnicians() {
+  return [...TECHNICIANS, ...S.activeTechs];
+}
 
 const WA_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
 const GOOGLE_SVG = `<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.79 2.73v2.27h2.9c1.7-1.56 2.68-3.87 2.68-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.27c-.81.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.34C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.95 10.69A5.4 5.4 0 013.68 9c0-.59.1-1.16.27-1.69V4.97H.96A9 9 0 000 9c0 1.45.35 2.83.96 4.03l2.99-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.97l2.99 2.34C4.66 5.17 6.65 3.58 9 3.58z"/></svg>`;
@@ -321,17 +357,21 @@ const S = {
   auth: { user: null, loading: true, signingIn: false, error: "", menuOpen: false },
   admin: { tab: "solicitudes", requests: [], rejectingId: null },
   myTech: { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null },
+  activeTechs: [],
 };
 
 let unsubAdminRequests = null;
 let unsubMyTech = null;
 let unsubMyNotifications = null;
+let unsubActiveTechs = null;
 
 function clearRealtimeListeners() {
   if (unsubAdminRequests) { unsubAdminRequests(); unsubAdminRequests = null; }
   if (unsubMyTech) { unsubMyTech(); unsubMyTech = null; }
   if (unsubMyNotifications) { unsubMyNotifications(); unsubMyNotifications = null; }
+  if (unsubActiveTechs) { unsubActiveTechs(); unsubActiveTechs = null; }
   S.admin.requests = [];
+  S.activeTechs = [];
   S.myTech = { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null };
 }
 
@@ -411,6 +451,13 @@ onAuthStateChanged(auth, (user) => {
       renderApp();
     }, (err) => console.error("Error leyendo solicitudes de técnicos:", err));
   }
+
+  // Directorio público: técnicos reales aprobados (visible para cualquier usuario logueado).
+  const activeQ = query(collection(db, "tecnicos"), where("status", "==", "activo"));
+  unsubActiveTechs = onSnapshot(activeQ, (snap) => {
+    S.activeTechs = snap.docs.map(d => mapFirestoreTechToDisplayTech(d.id, d.data()));
+    renderApp();
+  }, (err) => console.error("Error leyendo directorio de técnicos:", err));
 });
 
 function LoginGateHTML() {
@@ -489,6 +536,12 @@ function FooterHTML() {
 }
 
 function TechCardHTML(tech) {
+  const expBadge = tech.experienceYears ? `${tech.experienceYears} años` : (tech.experienceLabel || "Nuevo");
+  const ratingBlock = tech.rating != null
+    ? `<span style="color:var(--amber-light);font-size:13px">${"★".repeat(Math.floor(tech.rating))}</span>
+       <span style="font-weight:700;font-size:13px;color:var(--navy)">${tech.rating}</span>
+       <span style="font-size:12px;color:var(--muted)">(${tech.reviewCount})</span>`
+    : `<span class="badge b-green" style="font-size:11px">Nuevo en TUCADI</span>`;
   return `
   <div class="card" style="padding:20px">
     <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">
@@ -496,12 +549,10 @@ function TechCardHTML(tech) {
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
           <h3 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);line-height:1.2">${esc(tech.name)}</h3>
-          <span class="badge b-amber" style="flex-shrink:0;font-size:11px">${tech.experienceYears} años</span>
+          <span class="badge b-amber" style="flex-shrink:0;font-size:11px">${esc(expBadge)}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-          <span style="color:var(--amber-light);font-size:13px">${"★".repeat(Math.floor(tech.rating))}</span>
-          <span style="font-weight:700;font-size:13px;color:var(--navy)">${tech.rating}</span>
-          <span style="font-size:12px;color:var(--muted)">(${tech.reviewCount})</span>
+          ${ratingBlock}
         </div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px">📍 ${esc(tech.zone)}</div>
       </div>
@@ -590,7 +641,7 @@ function HomeHTML() {
           <button class="btn btn-outline" data-nav="list">Ver todos →</button>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
-          ${TECHNICIANS.slice(0, 3).map(t => TechCardHTML(t)).join("")}
+          ${[...S.activeTechs, ...TECHNICIANS].slice(0, 3).map(t => TechCardHTML(t)).join("")}
         </div>
       </div>
     </section>
@@ -682,11 +733,11 @@ function HowHTML() {
 // ─── LIST PAGE ──────────────────────────────────────────────────────────────────
 function filteredTechnicians() {
   const { search, svc, zone, rating } = S.list;
-  return TECHNICIANS.filter(t => {
+  return allTechnicians().filter(t => {
     if (search && !t.name.toLowerCase().includes(search.toLowerCase()) && !t.description.toLowerCase().includes(search.toLowerCase())) return false;
     if (svc && !t.services.includes(svc)) return false;
-    if (zone && t.zone !== zone) return false;
-    if (rating && t.rating < parseFloat(rating)) return false;
+    if (zone && t.zone !== zone && !(t.zones || []).includes(zone)) return false;
+    if (rating && (t.rating == null || t.rating < parseFloat(rating))) return false;
     return true;
   });
 }
@@ -709,7 +760,8 @@ function TechResultsHTML() {
 }
 
 function ListHTML() {
-  const zones = [...new Set(TECHNICIANS.map(t => t.zone))];
+  const all = allTechnicians();
+  const zones = [...new Set(all.flatMap(t => (t.zones && t.zones.length ? t.zones : [t.zone]).filter(Boolean)))];
   const active = [S.list.svc, S.list.zone, S.list.rating].filter(Boolean).length;
   return `
   <div>
@@ -720,7 +772,7 @@ function ListHTML() {
           <span style="font-size:13px;color:var(--muted)">· Hermosillo</span>
         </div>
         <h1 style="font-family:var(--fd);font-size:clamp(22px,4vw,30px);font-weight:700;color:var(--navy);margin-bottom:4px">Técnicos disponibles</h1>
-        <p style="font-size:13px;color:var(--mid)">${TECHNICIANS.length} técnicos</p>
+        <p style="font-size:13px;color:var(--mid)">${all.length} técnicos</p>
       </div>
     </div>
 
@@ -765,7 +817,7 @@ function ListHTML() {
 
 // ─── SOLICITAR ────────────────────────────────────────────────────────────────
 function RequestHTML() {
-  const tech = TECHNICIANS.find(t => t.id === S.eid);
+  const tech = allTechnicians().find(t => t.id === S.eid);
   if (!tech) return "";
   const selectedJob = tech.jobs.find(j => j.id === S.request.selectedJob) || null;
 
@@ -782,13 +834,14 @@ function RequestHTML() {
           <div class="av" style="background:${tech.avatarColor}">${tech.avatar}</div>
           <div>
             <div style="font-family:var(--fd);font-weight:600;color:var(--navy);font-size:15px">${esc(tech.name)}</div>
-            <div style="font-size:13px;color:var(--muted)">⭐ ${tech.rating} · ${esc(tech.zone)}</div>
+            <div style="font-size:13px;color:var(--muted)">${tech.rating != null ? "⭐ " + tech.rating + " · " : ""}${esc(tech.zone)}</div>
           </div>
         </div>
 
         <h2 style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--navy);margin-bottom:6px">Cuéntanos qué necesitas</h2>
         <p style="font-size:14px;color:var(--mid);margin-bottom:20px;line-height:1.6">Arma tu solicitud y te conectamos directo por WhatsApp con ${esc(tech.name.split(" ")[0])}.</p>
 
+        ${tech.jobs && tech.jobs.length > 0 ? `
         <label class="lbl">¿Qué tipo de servicio necesitas? (opcional)</label>
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
           ${tech.jobs.map(j => {
@@ -805,7 +858,7 @@ function RequestHTML() {
             </div>`;
           }).join("")}
         </div>
-        <p style="font-size:11px;color:var(--muted);margin-top:-12px;margin-bottom:20px">Precio de referencia del técnico. Lo confirman entre ustedes por WhatsApp.</p>
+        <p style="font-size:11px;color:var(--muted);margin-top:-12px;margin-bottom:20px">Precio de referencia del técnico. Lo confirman entre ustedes por WhatsApp.</p>` : ""}
 
         <label class="lbl">Describe el problema (opcional, pero ayuda)</label>
         <textarea class="inp" id="reqDesc" placeholder="Ej. El aire enciende pero no enfría" style="margin-bottom:20px"></textarea>
@@ -819,10 +872,68 @@ function RequestHTML() {
 
 // ─── PROFILE PAGE ────────────────────────────────────────────────────────────────
 function ProfileHTML() {
-  const tech = TECHNICIANS.find(t => t.id === S.eid);
+  const tech = allTechnicians().find(t => t.id === S.eid);
   if (!tech) return "";
   const reviews = REVIEWS[tech.id] || [];
   const selJob = S.profile.selJob;
+  const expLabel = tech.experienceYears ? `${tech.experienceYears} años exp.` : (tech.experienceLabel || "Nuevo en TUCADI");
+
+  const ratingHeaderBlock = tech.rating != null ? `
+    <span style="color:var(--amber-light);font-size:14px">${"★".repeat(Math.floor(tech.rating))}</span>
+    <span style="font-weight:700;font-size:14px;color:var(--navy)">${tech.rating}</span>
+    <span style="font-size:13px;color:var(--muted)">(${tech.reviewCount} reseñas)</span>` : `
+    <span class="badge b-green">Nuevo en TUCADI</span>`;
+
+  const jobsBlock = (tech.jobs && tech.jobs.length > 0) ? `
+    <div class="card-flat" style="padding:18px 20px;margin-bottom:16px">
+      <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:4px">Trabajos y precios de referencia</h2>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Precios definidos por el técnico. Se confirman directo con él por WhatsApp.</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${tech.jobs.map(j => {
+          const sel = selJob === j.id;
+          return `
+          <div class="job-row ${sel ? "selected" : ""}" data-toggle-job="${j.id}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:15px;color:var(--navy)">${esc(j.name)}</div>
+                <div style="font-size:13px;color:var(--mid);margin-top:3px;line-height:1.5">${esc(j.desc)}</div>
+              </div>
+              <div style="font-family:var(--fd);font-weight:800;font-size:17px;color:var(--navy);flex-shrink:0">${fmt(j.price)}</div>
+            </div>
+            ${sel ? `
+              <div style="margin-top:12px">
+                <button class="btn btn-amber full" style="font-size:14px;padding:12px" data-nav="eval" data-id="${tech.id}">Solicitar este servicio →</button>
+              </div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+    </div>` : `
+    <div class="card-flat" style="padding:18px 20px;margin-bottom:16px">
+      <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px">Trabajos y precios</h2>
+      <p style="font-size:13px;color:var(--mid);line-height:1.6">Este técnico aún no ha definido precios de referencia. Solicita una cotización directa y él te la envía por WhatsApp.</p>
+    </div>`;
+
+  const statsBlock = tech.rating != null ? `
+    <div class="card-flat" style="padding:16px 20px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
+        ${[["⭐ " + tech.rating, "Calificación"], [tech.reviewCount, "Reseñas"], [(tech.experienceYears + " años"), "Experiencia"]].map(([v, l]) => `
+          <div><div style="font-family:var(--fd);font-size:17px;font-weight:700;color:var(--navy)">${v}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${l}</div></div>`).join("")}
+      </div>
+    </div>` : "";
+
+  const reviewsBlock = tech.rating != null ? `
+    <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:14px">Reseñas (${reviews.length})</h2>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${reviews.map(r => `
+        <div class="card-flat" style="padding:15px 18px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+            <span style="font-weight:600;font-size:14px;color:var(--navy)">${esc(r.userName)}</span>
+            <span style="color:var(--amber-light);font-size:13px">${"★".repeat(r.rating)}</span>
+          </div>
+          <p style="font-size:13px;color:var(--mid);line-height:1.7">${esc(r.comment)}</p>
+        </div>`).join("")}
+    </div>` : `
+    <div class="card-flat" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Este técnico es nuevo en TUCADI y todavía no tiene reseñas.</div>`;
 
   return `
   <div class="has-wafloat">
@@ -837,10 +948,8 @@ function ProfileHTML() {
           <div style="flex:1;min-width:200px">
             <h1 style="font-family:var(--fd);font-size:clamp(20px,4vw,28px);font-weight:700;color:var(--navy);margin-bottom:6px">${esc(tech.name)}</h1>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-              <span style="color:var(--amber-light);font-size:14px">${"★".repeat(Math.floor(tech.rating))}</span>
-              <span style="font-weight:700;font-size:14px;color:var(--navy)">${tech.rating}</span>
-              <span style="font-size:13px;color:var(--muted)">(${tech.reviewCount} reseñas)</span>
-              <span class="badge b-amber">${tech.experienceYears} años exp.</span>
+              ${ratingHeaderBlock}
+              <span class="badge b-amber">${esc(expLabel)}</span>
             </div>
             <div style="font-size:13px;color:var(--mid)">📍 ${esc(tech.zone)}</div>
           </div>
@@ -853,53 +962,15 @@ function ProfileHTML() {
       <div class="con">
         <div style="display:grid;grid-template-columns:1fr 290px;gap:24px;align-items:start" id="profileGrid">
           <div>
-            <div class="card-flat" style="padding:18px 20px;margin-bottom:16px">
-              <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:4px">Trabajos y precios de referencia</h2>
-              <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Precios definidos por el técnico. Se confirman directo con él por WhatsApp.</p>
-              <div style="display:flex;flex-direction:column;gap:12px">
-                ${tech.jobs.map(j => {
-                  const sel = selJob === j.id;
-                  return `
-                  <div class="job-row ${sel ? "selected" : ""}" data-toggle-job="${j.id}">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-                      <div style="flex:1">
-                        <div style="font-weight:700;font-size:15px;color:var(--navy)">${esc(j.name)}</div>
-                        <div style="font-size:13px;color:var(--mid);margin-top:3px;line-height:1.5">${esc(j.desc)}</div>
-                      </div>
-                      <div style="font-family:var(--fd);font-weight:800;font-size:17px;color:var(--navy);flex-shrink:0">${fmt(j.price)}</div>
-                    </div>
-                    ${sel ? `
-                      <div style="margin-top:12px">
-                        <button class="btn btn-amber full" style="font-size:14px;padding:12px" data-nav="eval" data-id="${tech.id}">Solicitar este servicio →</button>
-                      </div>` : ""}
-                  </div>`;
-                }).join("")}
-              </div>
-            </div>
+            ${jobsBlock}
 
             <div class="card-flat" style="padding:18px 20px;margin-bottom:16px">
               <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:10px">Sobre ${esc(tech.name.split(" ")[0])}</h2>
-              <p style="font-size:14px;color:var(--mid);line-height:1.8">${esc(tech.description)}</p>
+              <p style="font-size:14px;color:var(--mid);line-height:1.8">${esc(tech.description || "Este técnico aún no ha agregado una descripción.")}</p>
             </div>
 
-            <div class="card-flat" style="padding:16px 20px;margin-bottom:16px">
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
-                ${[["⭐ " + tech.rating, "Calificación"], [tech.reviewCount, "Reseñas"], [tech.experienceYears + " años", "Experiencia"]].map(([v, l]) => `
-                  <div><div style="font-family:var(--fd);font-size:17px;font-weight:700;color:var(--navy)">${v}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${l}</div></div>`).join("")}
-              </div>
-            </div>
-
-            <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:14px">Reseñas (${reviews.length})</h2>
-            <div style="display:flex;flex-direction:column;gap:12px">
-              ${reviews.map(r => `
-                <div class="card-flat" style="padding:15px 18px">
-                  <div style="display:flex;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-                    <span style="font-weight:600;font-size:14px;color:var(--navy)">${esc(r.userName)}</span>
-                    <span style="color:var(--amber-light);font-size:13px">${"★".repeat(r.rating)}</span>
-                  </div>
-                  <p style="font-size:13px;color:var(--mid);line-height:1.7">${esc(r.comment)}</p>
-                </div>`).join("")}
-            </div>
+            ${statsBlock}
+            ${reviewsBlock}
           </div>
 
           <div class="hide-mobile" style="position:sticky;top:76px">
@@ -910,7 +981,7 @@ function ProfileHTML() {
               <a href="https://wa.me/52${tech.phone}" target="_blank" rel="noopener noreferrer" class="btn btn-wa-lg">${WA_SVG} WhatsApp directo</a>
               <div class="divider"></div>
               <div style="display:flex;flex-direction:column;gap:10px">
-                ${[["Servicios", tech.services.join(", ")], ["Zona", tech.zone], ["Experiencia", tech.experienceYears + " años"]].map(([l, v]) => `
+                ${[["Servicios", (tech.services || []).join(", ") || "—"], ["Zona", tech.zone || "—"], ["Experiencia", expLabel]].map(([l, v]) => `
                   <div style="display:flex;justify-content:space-between;font-size:13px;gap:10px">
                     <span style="color:var(--muted)">${l}</span>
                     <span style="font-weight:600;color:var(--navy);text-align:right;max-width:160px">${esc(v)}</span>
@@ -1365,7 +1436,7 @@ document.addEventListener("click", (e) => {
   if (navEl) {
     const target = navEl.getAttribute("data-nav");
     const idAttr = navEl.getAttribute("data-id");
-    nav(target, idAttr ? parseInt(idAttr, 10) : null);
+    nav(target, idAttr || null);
     return;
   }
 
@@ -1396,8 +1467,8 @@ document.addEventListener("click", (e) => {
 
   const waContactEl = e.target.closest("[data-wa-contact]");
   if (waContactEl) {
-    const techId = parseInt(waContactEl.getAttribute("data-wa-contact"), 10);
-    const tech = TECHNICIANS.find(t => t.id === techId);
+    const techId = waContactEl.getAttribute("data-wa-contact");
+    const tech = allTechnicians().find(t => t.id === techId);
     if (!tech) return;
     const job = tech.jobs.find(j => j.id === S.request.selectedJob) || null;
     const desc = document.getElementById("reqDesc")?.value || "";
