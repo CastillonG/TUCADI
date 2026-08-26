@@ -155,7 +155,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, serverTimestamp,
-  query, where, orderBy, onSnapshot, doc, updateDoc, limit,
+  query, where, onSnapshot, doc, updateDoc, limit,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut,
@@ -378,11 +378,12 @@ onAuthStateChanged(auth, (user) => {
       const notifQ = query(
         collection(db, "solicitudes_clientes"),
         where("technicianPhone", "==", S.myTech.doc.phone),
-        orderBy("createdAt", "desc"),
         limit(30)
       );
       unsubMyNotifications = onSnapshot(notifQ, (nSnap) => {
-        S.myTech.notifications = nSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        S.myTech.notifications = nSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => jsDateMillis(b.createdAt) - jsDateMillis(a.createdAt));
         renderApp();
       }, (err) => console.error("Error leyendo notificaciones:", err));
     } else {
@@ -392,9 +393,11 @@ onAuthStateChanged(auth, (user) => {
 
   // Panel de administrador: solicitudes pendientes.
   if (isAdmin(user)) {
-    const adminQ = query(collection(db, "tecnicos"), where("status", "==", "pendiente"), orderBy("createdAt", "desc"));
+    const adminQ = query(collection(db, "tecnicos"), where("status", "==", "pendiente"));
     unsubAdminRequests = onSnapshot(adminQ, (snap) => {
-      S.admin.requests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      S.admin.requests = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => jsDateMillis(b.createdAt) - jsDateMillis(a.createdAt));
       renderApp();
     }, (err) => console.error("Error leyendo solicitudes de técnicos:", err));
   }
@@ -917,6 +920,10 @@ function jsDate(v) {
   if (typeof v.toDate === "function") return v.toDate();
   return new Date(v);
 }
+function jsDateMillis(v) {
+  const d = jsDate(v);
+  return d ? d.getTime() : 0;
+}
 
 function RegistrationFormHTML(existing) {
   const d = existing || {};
@@ -1086,12 +1093,20 @@ function SignupHTML() {
     <div style="padding:20px 16px 56px">
       <div class="con" style="max-width:640px">
         <div class="tab-row" style="margin-bottom:20px">
-          <button class="tab-btn ${S.signup.tab !== "notificaciones" ? "active" : ""}" data-signup-tab="editar">Editar información</button>
+          <button class="tab-btn ${S.signup.tab === "editar" ? "active" : ""}" data-signup-tab="editar">Editar información</button>
           <button class="tab-btn ${S.signup.tab === "notificaciones" ? "active" : ""}" data-signup-tab="notificaciones">
             Notificaciones ${S.myTech.notifications.filter(n => n.status === "nueva").length > 0 ? `<span class="badge b-amber" style="margin-left:4px">${S.myTech.notifications.filter(n => n.status === "nueva").length}</span>` : ""}
           </button>
+          <button class="tab-btn ${S.signup.tab === "dashboard" ? "active" : ""}" data-signup-tab="dashboard">Dashboard</button>
         </div>
-        ${S.signup.tab === "notificaciones" ? NotificationsHTML() : RegistrationFormHTML(tech)}
+        ${S.signup.tab === "notificaciones" ? NotificationsHTML()
+          : S.signup.tab === "dashboard" ? `
+            <div class="card-flat" style="padding:48px 24px;text-align:center">
+              <div style="font-size:38px;margin-bottom:12px">🚧</div>
+              <h2 style="font-family:var(--fd);font-size:19px;font-weight:700;color:var(--navy);margin-bottom:8px">Dashboard en proceso</h2>
+              <p style="font-size:13px;color:var(--muted)">Aquí verás tus estadísticas: solicitudes recibidas, respondidas y tu actividad en TUCADI.</p>
+            </div>`
+          : RegistrationFormHTML(tech)}
       </div>
     </div>
   </div>`;
@@ -1144,30 +1159,16 @@ function AdminHTML() {
     <div style="background:var(--bg-warm);border-bottom:1px solid var(--border);padding:26px 16px">
       <div class="con">
         <h1 style="font-family:var(--fd);font-size:clamp(20px,3.5vw,28px);font-weight:700;color:var(--navy);margin-bottom:4px">Panel de administrador</h1>
-        <p style="font-size:13px;color:var(--mid)">Gestión de técnicos y operación de TUCADI</p>
+        <p style="font-size:13px;color:var(--mid)">Solicitudes de técnicos pendientes de revisión</p>
       </div>
     </div>
 
     <div style="padding:20px 16px 56px">
       <div class="con" style="max-width:760px">
-        <div class="tab-row" style="margin-bottom:20px">
-          <button class="tab-btn ${S.admin.tab === "solicitudes" ? "active" : ""}" data-admin-tab="solicitudes">
-            Solicitudes ${reqs.length > 0 ? `<span class="badge b-amber" style="margin-left:4px">${reqs.length}</span>` : ""}
-          </button>
-          <button class="tab-btn ${S.admin.tab === "dashboard" ? "active" : ""}" data-admin-tab="dashboard">Dashboard</button>
-        </div>
-
-        ${S.admin.tab === "dashboard" ? `
-          <div class="card-flat" style="padding:48px 24px;text-align:center">
-            <div style="font-size:38px;margin-bottom:12px">🚧</div>
-            <h2 style="font-family:var(--fd);font-size:19px;font-weight:700;color:var(--navy);margin-bottom:8px">Dashboard en proceso</h2>
-            <p style="font-size:13px;color:var(--muted)">Aquí vivirán las métricas de TUCADI: técnicos activos, solicitudes por zona y actividad de clientes.</p>
-          </div>
-        ` : (
-          reqs.length === 0
-            ? `<div class="card-flat" style="padding:40px 24px;text-align:center;color:var(--muted);font-size:13px">No hay solicitudes pendientes por revisar.</div>`
-            : reqs.map(r => AdminRequestCardHTML(r)).join("")
-        )}
+        ${reqs.length === 0
+          ? `<div class="card-flat" style="padding:40px 24px;text-align:center;color:var(--muted);font-size:13px">No hay solicitudes pendientes por revisar.</div>`
+          : reqs.map(r => AdminRequestCardHTML(r)).join("")
+        }
       </div>
     </div>
   </div>`;
