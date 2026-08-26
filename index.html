@@ -143,6 +143,14 @@
   .sp-rechazado{background:#fee2e2;color:#b91c1c}
   .notif-card{border:1px solid var(--border);border-radius:var(--rs);padding:13px 16px;background:white;margin-bottom:10px}
   .notif-card.nueva{border-left:3px solid var(--amber)}
+
+  .bell-btn{position:relative;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:none;border:none;cursor:pointer;color:var(--mid)}
+  .bell-btn:hover{background:var(--bg-warm);color:var(--navy)}
+  .bell-badge{position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:var(--amber);color:white;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+
+  .profile-edit-card{padding:18px 20px;margin-bottom:16px;position:relative}
+  .edit-pencil{position:absolute;top:14px;right:14px;background:var(--bg-warm);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid)}
+  .edit-pencil:hover{color:var(--navy);border-color:var(--navy)}
 </style>
 </head>
 <body>
@@ -290,6 +298,8 @@ const REVIEWS = {
 
 const WA_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
 const GOOGLE_SVG = `<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.79 2.73v2.27h2.9c1.7-1.56 2.68-3.87 2.68-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.27c-.81.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.34C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.95 10.69A5.4 5.4 0 013.68 9c0-.59.1-1.16.27-1.69V4.97H.96A9 9 0 000 9c0 1.45.35 2.83.96 4.03l2.99-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.97l2.99 2.34C4.66 5.17 6.65 3.58 9 3.58z"/></svg>`;
+const BELL_SVG = `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+const PENCIL_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>`;
 
 function buildWaLink(tech, job, description) {
   const lines = [`Hola ${tech.name.split(" ")[0]}, te contacto desde TUCADI.`];
@@ -310,7 +320,7 @@ const S = {
   signup: { done: false, tab: "editar" },
   auth: { user: null, loading: true, signingIn: false, error: "", menuOpen: false },
   admin: { tab: "solicitudes", requests: [], rejectingId: null },
-  myTech: { doc: null, loading: true, notifications: [], saving: false, saved: false },
+  myTech: { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null },
 };
 
 let unsubAdminRequests = null;
@@ -322,14 +332,14 @@ function clearRealtimeListeners() {
   if (unsubMyTech) { unsubMyTech(); unsubMyTech = null; }
   if (unsubMyNotifications) { unsubMyNotifications(); unsubMyNotifications = null; }
   S.admin.requests = [];
-  S.myTech = { doc: null, loading: true, notifications: [], saving: false, saved: false };
+  S.myTech = { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null };
 }
 
 function nav(target, id) {
   if (id !== undefined && id !== null) S.eid = id;
   if (target === "eval") S.request = { selectedJob: null };
   if (target === "profile") S.profile.selJob = null;
-  if (target === "signup") { S.signup.tab = "editar"; S.myTech.saved = false; }
+  if (target === "signup") { S.signup.tab = "editar"; S.myTech.saved = false; S.myTech.editSection = null; }
   if (target === "admin") S.admin.rejectingId = null;
   S.page = target;
   renderApp();
@@ -439,6 +449,13 @@ function NavHTML() {
     </div>` : "";
 
   const profileLabel = S.myTech.doc ? "Mi perfil" : "Soy técnico";
+  const isActiveTech = S.myTech.doc && S.myTech.doc.status === "activo";
+  const newNotifCount = isActiveTech ? S.myTech.notifications.filter(n => n.status === "nueva").length : 0;
+  const bellBtn = isActiveTech ? `
+    <button class="bell-btn" data-open-notifications title="Notificaciones de clientes">
+      ${BELL_SVG}
+      ${newNotifCount > 0 ? `<span class="bell-badge">${newNotifCount > 9 ? "9+" : newNotifCount}</span>` : ""}
+    </button>` : "";
 
   return `
   <nav class="nav"><div class="nav-in">
@@ -448,6 +465,7 @@ function NavHTML() {
       <button class="nlink" data-nav="how">¿Cómo funciona?</button>
       <button class="ncta" data-nav="signup">${profileLabel}</button>
       ${isAdmin(user) ? `<button class="nlink" data-nav="admin">Admin</button>` : ""}
+      ${bellBtn}
       ${userBlock}
     </div>
   </div></nav>`;
@@ -1015,6 +1033,125 @@ function NotificationsHTML() {
   </div>`;
 }
 
+// ─── MI PERFIL (vista tipo perfil público, con edición por sección) ──────────────
+function initialsOf(name) {
+  return (name || "?").trim().split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase();
+}
+
+function MyProfileViewHTML(tech) {
+  const editing = S.myTech.editSection;
+  const initials = initialsOf(tech.name);
+
+  // ── Encabezado: nombre / negocio / teléfono / experiencia ──
+  const infoBlock = editing === "info" ? `
+    <form class="card-flat profile-edit-card" id="editInfoForm">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><label class="lbl">Nombre completo *</label><input class="inp" required name="name" value="${esc(tech.name || "")}"></div>
+        <div><label class="lbl">Nombre del negocio</label><input class="inp" name="business" value="${esc(tech.business || "")}"></div>
+        <div><label class="lbl">WhatsApp / Teléfono *</label><input class="inp" required type="tel" name="phone" value="${esc(tech.phone || "")}"></div>
+        <div>
+          <label class="lbl">Años de experiencia *</label>
+          <select class="sel" required name="experience">
+            ${EXP_OPTS.map(o => `<option ${tech.experience === o ? "selected" : ""}>${o}</option>`).join("")}
+          </select>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button type="submit" class="btn btn-navy" style="font-size:13px;padding:9px 16px">Guardar</button>
+          <button type="button" class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-cancel-edit-section>Cancelar</button>
+        </div>
+      </div>
+    </form>` : `
+    <div class="card-flat profile-edit-card">
+      <button type="button" class="edit-pencil" data-toggle-edit-section="info" title="Editar información básica">${PENCIL_SVG}</button>
+      <div style="display:flex;gap:16px;align-items:center">
+        <div class="av av-lg" style="background:var(--navy)">${esc(initials)}</div>
+        <div>
+          <h2 style="font-family:var(--fd);font-size:19px;font-weight:700;color:var(--navy)">${esc(tech.name)}</h2>
+          ${tech.business ? `<div style="font-size:13px;color:var(--mid)">${esc(tech.business)}</div>` : ""}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+            <span class="badge b-amber">${esc(tech.experience || "—")}</span>
+            <span class="badge b-navy">${esc(tech.category || "Aire acondicionado")}</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:13px;color:var(--mid)">📞 ${esc(tech.phone || "—")}</div>
+    </div>`;
+
+  // ── Servicios ──
+  const knownServices = new Set(SERVICE_OPTS);
+  const otherService = (tech.services || []).find(s => !knownServices.has(s)) || "";
+  const servicesBlock = editing === "services" ? `
+    <form class="card-flat profile-edit-card" id="editServicesForm">
+      <label class="lbl">Servicios que ofreces *</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 12px">
+        ${SERVICE_OPTS.map(s => `<button type="button" class="svc-btn ${(tech.services || []).includes(s) ? "selected" : ""}" data-service-toggle="${esc(s)}">${esc(s)}</button>`).join("")}
+        <button type="button" class="svc-btn ${otherService ? "selected" : ""}" id="svcOtherToggle" data-service-toggle="Otro">Otro</button>
+      </div>
+      <input class="inp" id="svcOtherInput" placeholder="Describe el servicio adicional" style="margin-bottom:14px;display:${otherService ? "block" : "none"}" value="${esc(otherService)}">
+      <div style="display:flex;gap:10px">
+        <button type="submit" class="btn btn-navy" style="font-size:13px;padding:9px 16px">Guardar</button>
+        <button type="button" class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-cancel-edit-section>Cancelar</button>
+      </div>
+    </form>` : `
+    <div class="card-flat profile-edit-card">
+      <button type="button" class="edit-pencil" data-toggle-edit-section="services" title="Editar servicios">${PENCIL_SVG}</button>
+      <h3 style="font-family:var(--fd);font-size:16px;font-weight:600;color:var(--navy);margin-bottom:10px">Servicios que ofrezco</h3>
+      <div>${(tech.services || []).map(s => `<span class="stag">${esc(s)}</span>`).join(" ") || `<span style="font-size:13px;color:var(--muted)">Sin servicios definidos</span>`}</div>
+    </div>`;
+
+  // ── Zonas ──
+  const selZones = new Set(tech.zones || []);
+  const zonesBlock = editing === "zones" ? `
+    <form class="card-flat profile-edit-card" id="editZonesForm">
+      <label class="lbl">Zona(s) de cobertura *</label>
+      <div style="display:flex;flex-direction:column;gap:8px;margin:8px 0 14px">
+        ${ZONE_OPTS.map(z => `
+          <label class="card-flat" style="display:flex;gap:10px;align-items:flex-start;padding:11px 14px;cursor:pointer">
+            <input type="checkbox" name="zone" value="${esc(z.label)}" ${selZones.has(z.label) ? "checked" : ""} style="margin-top:3px;flex-shrink:0">
+            <span>
+              <span style="display:block;font-weight:600;font-size:13.5px;color:var(--navy)">${esc(z.label)}</span>
+              <span style="display:block;font-size:12px;color:var(--muted);margin-top:2px">${esc(z.sub)}</span>
+            </span>
+          </label>`).join("")}
+      </div>
+      <div style="display:flex;gap:10px">
+        <button type="submit" class="btn btn-navy" style="font-size:13px;padding:9px 16px">Guardar</button>
+        <button type="button" class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-cancel-edit-section>Cancelar</button>
+      </div>
+    </form>` : `
+    <div class="card-flat profile-edit-card">
+      <button type="button" class="edit-pencil" data-toggle-edit-section="zones" title="Editar zonas">${PENCIL_SVG}</button>
+      <h3 style="font-family:var(--fd);font-size:16px;font-weight:600;color:var(--navy);margin-bottom:10px">Zonas de cobertura</h3>
+      <div>${(tech.zones || []).map(z => `<span class="zone-chip">${esc(z)}</span>`).join("") || `<span style="font-size:13px;color:var(--muted)">Sin zonas definidas</span>`}</div>
+    </div>`;
+
+  // ── Descripción ──
+  const descBlock = editing === "description" ? `
+    <form class="card-flat profile-edit-card" id="editDescriptionForm">
+      <label class="lbl">Sobre tu trabajo</label>
+      <textarea class="inp" name="description" style="margin:8px 0 14px;min-height:100px" placeholder="Marcas que manejas, tus especialidades, garantías que ofreces...">${esc(tech.description || "")}</textarea>
+      <div style="display:flex;gap:10px">
+        <button type="submit" class="btn btn-navy" style="font-size:13px;padding:9px 16px">Guardar</button>
+        <button type="button" class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-cancel-edit-section>Cancelar</button>
+      </div>
+    </form>` : `
+    <div class="card-flat profile-edit-card">
+      <button type="button" class="edit-pencil" data-toggle-edit-section="description" title="Editar descripción">${PENCIL_SVG}</button>
+      <h3 style="font-family:var(--fd);font-size:16px;font-weight:600;color:var(--navy);margin-bottom:10px">Sobre mi trabajo</h3>
+      <p style="font-size:13.5px;color:var(--mid);line-height:1.7">${esc(tech.description || "Aún no has agregado una descripción.")}</p>
+    </div>`;
+
+  return `
+  <div>
+    ${S.myTech.saved ? `<div class="alert al-green" style="margin-bottom:16px">✓ Cambios guardados</div>` : ""}
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Así es como los clientes ven tu perfil. Usa el ícono de lápiz para editar cada sección.</p>
+    ${infoBlock}
+    ${servicesBlock}
+    ${zonesBlock}
+    ${descBlock}
+  </div>`;
+}
+
 function SignupHTML() {
   const user = S.auth.user;
 
@@ -1106,7 +1243,7 @@ function SignupHTML() {
               <h2 style="font-family:var(--fd);font-size:19px;font-weight:700;color:var(--navy);margin-bottom:8px">Dashboard en proceso</h2>
               <p style="font-size:13px;color:var(--muted)">Aquí verás tus estadísticas: solicitudes recibidas, respondidas y tu actividad en TUCADI.</p>
             </div>`
-          : RegistrationFormHTML(tech)}
+          : MyProfileViewHTML(tech)}
       </div>
     </div>
   </div>`;
@@ -1232,6 +1369,15 @@ document.addEventListener("click", (e) => {
     return;
   }
 
+  const bellEl = e.target.closest("[data-open-notifications]");
+  if (bellEl) {
+    S.signup.tab = "notificaciones";
+    S.page = "signup";
+    renderApp();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
   const reqJobEl = e.target.closest("[data-toggle-request-job]");
   if (reqJobEl) {
     const jobId = reqJobEl.getAttribute("data-toggle-request-job");
@@ -1340,6 +1486,21 @@ document.addEventListener("click", (e) => {
     return;
   }
 
+  const toggleEditSectionEl = e.target.closest("[data-toggle-edit-section]");
+  if (toggleEditSectionEl) {
+    S.myTech.editSection = toggleEditSectionEl.getAttribute("data-toggle-edit-section");
+    S.myTech.saved = false;
+    renderApp();
+    return;
+  }
+
+  const cancelEditSectionEl = e.target.closest("[data-cancel-edit-section]");
+  if (cancelEditSectionEl) {
+    S.myTech.editSection = null;
+    renderApp();
+    return;
+  }
+
   const filterToggleEl = e.target.closest("[data-filter-toggle]");
   if (filterToggleEl) {
     S.list.open = !S.list.open;
@@ -1393,6 +1554,55 @@ document.addEventListener("change", (e) => {
 });
 
 document.addEventListener("submit", async (e) => {
+  // ── Mini-formas de edición por sección en "Mi perfil" ──
+  if (["editInfoForm", "editServicesForm", "editZonesForm", "editDescriptionForm"].includes(e.target.id)) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const techId = S.myTech.doc ? S.myTech.doc.id : null;
+    if (!techId) return;
+
+    let payload = {};
+    if (form.id === "editInfoForm") {
+      payload = {
+        name: form.name.value.trim(),
+        business: form.business.value.trim(),
+        phone: form.phone.value.trim(),
+        experience: form.experience.value,
+      };
+      if (!payload.name || !payload.phone) { alert("Nombre y teléfono son obligatorios."); return; }
+    } else if (form.id === "editServicesForm") {
+      let services = Array.from(form.querySelectorAll("[data-service-toggle].selected"))
+        .map(b => b.getAttribute("data-service-toggle"));
+      const otherInput = document.getElementById("svcOtherInput");
+      const otherText = otherInput ? otherInput.value.trim() : "";
+      if (services.includes("Otro")) {
+        services = services.filter(s => s !== "Otro");
+        if (otherText) services.push(otherText);
+      }
+      payload = { services };
+    } else if (form.id === "editZonesForm") {
+      const zones = Array.from(form.querySelectorAll('input[name="zone"]:checked')).map(cb => cb.value);
+      if (zones.length === 0) { alert("Selecciona al menos una zona."); return; }
+      payload = { zones };
+    } else if (form.id === "editDescriptionForm") {
+      payload = { description: form.description.value.trim() };
+    }
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Guardando..."; }
+    try {
+      await updateDoc(doc(db, "tecnicos", techId), payload);
+      S.myTech.editSection = null;
+      S.myTech.saved = true;
+      renderApp();
+    } catch (err) {
+      console.error("Error guardando sección de perfil:", err);
+      alert("No se pudo guardar: " + (err.message || err.code || "error desconocido"));
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Guardar"; }
+    }
+    return;
+  }
+
   if (e.target.id !== "signupForm") return;
   e.preventDefault();
 
