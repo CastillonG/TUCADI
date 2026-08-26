@@ -151,6 +151,9 @@
   .profile-edit-card{padding:18px 20px;margin-bottom:16px;position:relative}
   .edit-pencil{position:absolute;top:14px;right:14px;background:var(--bg-warm);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid)}
   .edit-pencil:hover{color:var(--navy);border-color:var(--navy)}
+  .danger-zone{border:1px solid #fecaca;background:#fef2f2;border-radius:var(--r);padding:16px 18px;margin-top:24px}
+  .btn-danger{background:white;color:#b91c1c;border:1.5px solid #fca5a5;padding:10px 16px;font-size:13px}
+  .btn-danger:hover{background:#fee2e2}
 </style>
 </head>
 <body>
@@ -163,7 +166,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, serverTimestamp,
-  query, where, onSnapshot, doc, updateDoc, limit,
+  query, where, onSnapshot, doc, updateDoc, deleteDoc, limit,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut,
@@ -224,78 +227,6 @@ const ZONE_OPTS = [
 ];
 const EXP_OPTS = ["1 año", "2–3 años", "4–6 años", "7–10 años", "Más de 10 años"];
 
-// ─── MOCK DATA ──────────────────────────────────────────────────────────────────
-const TECHNICIANS = [
-  {
-    id: "m1", name: "Carlos Mendoza", rating: 4.9, reviewCount: 47, experienceYears: 12,
-    services: ["Instalación", "Reparación", "Mantenimiento"],
-    zone: "Centro / Pitic",
-    description: "Técnico certificado con más de 12 años de experiencia en instalación y reparación de minisplits de todas las marcas. Trabajo garantizado, precios justos y atención el mismo día.",
-    phone: "6621234567", avatar: "CM", avatarColor: "#1e3a5f",
-    jobs: [
-      { id: "j1", name: "Instalación minisplit 1 ton", price: 1200, desc: "Incluye soporte, cañería 3m y conexión eléctrica." },
-      { id: "j2", name: "Reparación / diagnóstico", price: 800, desc: "Revisión completa, carga de gas y reparación de fallas eléctricas." },
-      { id: "j3", name: "Mantenimiento preventivo", price: 450, desc: "Lavado de filtros, revisión de compresor y verificación de refrigerante." },
-    ],
-  },
-  {
-    id: "m2", name: "Roberto Salazar", rating: 4.8, reviewCount: 31, experienceYears: 8,
-    services: ["Instalación", "Mantenimiento"],
-    zone: "Villa del Real / Perisur",
-    description: "Especialista en instalaciones residenciales y comerciales. Trabajo limpio, materiales de calidad y garantía de 6 meses en instalaciones nuevas.",
-    phone: "6629876543", avatar: "RS", avatarColor: "#2d6a4f",
-    jobs: [
-      { id: "j4", name: "Instalación completa con materiales", price: 1800, desc: "Minisplit hasta 2 ton, materiales incluidos, garantía 6 meses." },
-      { id: "j5", name: "Mantenimiento preventivo", price: 500, desc: "Limpieza profunda, revisión eléctrica y reporte de condición." },
-    ],
-  },
-  {
-    id: "m3", name: "Jesús Félix", rating: 4.7, reviewCount: 28, experienceYears: 6,
-    services: ["Reparación", "Mantenimiento"],
-    zone: "Lomas de Hermosillo / Bugambilias",
-    description: "Me especializo en diagnóstico y reparación de equipos. Reviso fallas eléctricas, problemas de refrigerante y mantenimiento preventivo. Respondo rápido por WhatsApp.",
-    phone: "6625551234", avatar: "JF", avatarColor: "#7b3f00",
-    jobs: [
-      { id: "j6", name: "Reparación de compresor", price: 950, desc: "Diagnóstico y reparación de fallas en compresor y sistema de enfriamiento." },
-      { id: "j7", name: "Mantenimiento básico", price: 350, desc: "Limpieza de filtros y revisión de niveles de refrigerante." },
-    ],
-  },
-  {
-    id: "m4", name: "Miguel Valenzuela", rating: 4.6, reviewCount: 19, experienceYears: 4,
-    services: ["Instalación", "Reparación"],
-    zone: "San Benito / Proyecto Río",
-    description: "Joven técnico con formación en refrigeración industrial. Trabajo con marcas LG, Samsung, Carrier y Daikin. Presupuesto sin costo.",
-    phone: "6623334444", avatar: "MV", avatarColor: "#4a1942",
-    jobs: [
-      { id: "j8", name: "Instalación estándar", price: 900, desc: "Instalación limpia con garantía de 3 meses en mano de obra." },
-      { id: "j9", name: "Reparación general", price: 650, desc: "Diagnóstico y reparación de fallas comunes en minisplits." },
-    ],
-  },
-];
-
-const REVIEWS = {
-  m1: [
-    { userName: "Ana G.", rating: 5, comment: "Excelente servicio, llegó puntual y dejó todo limpio. Lo recomiendo mucho." },
-    { userName: "Luis R.", rating: 5, comment: "Resolvió el problema de mi minisplit en menos de una hora. Muy profesional." },
-    { userName: "Patricia M.", rating: 4, comment: "Buen trabajo, precio justo. Solo tardó un poco más de lo esperado." },
-    { userName: "Jorge A.", rating: 5, comment: "Ya es la tercera vez que lo contrato y siempre quedo satisfecho." },
-  ],
-  m2: [
-    { userName: "Sandra L.", rating: 5, comment: "Instaló dos equipos en mi casa, quedaron perfectos y muy ordenados los cables." },
-    { userName: "Héctor N.", rating: 5, comment: "Muy responsable y puntual. Sabe lo que hace." },
-    { userName: "Carmen V.", rating: 4, comment: "Buen precio y trabajo limpio. Lo volvería a contratar." },
-  ],
-  m3: [
-    { userName: "Ricardo P.", rating: 5, comment: "Diagnosticó el problema de mi equipo que otros no pudieron. 10/10." },
-    { userName: "Mariana C.", rating: 4, comment: "Reparó mi split el mismo día que llamé. Muy eficiente." },
-    { userName: "Eduardo S.", rating: 5, comment: "Sabe mucho de su trabajo, me explicó todo el proceso." },
-  ],
-  m4: [
-    { userName: "Fernanda O.", rating: 5, comment: "Joven muy profesional y honesto con los precios." },
-    { userName: "Arturo M.", rating: 4, comment: "Instaló el equipo rápido y bien. Buena comunicación." },
-  ],
-};
-
 const AVATAR_PALETTE = ["#1e3a5f", "#2d6a4f", "#7b3f00", "#4a1942", "#0f2540", "#8a3324"];
 function colorForName(name) {
   let hash = 0;
@@ -329,7 +260,7 @@ function mapFirestoreTechToDisplayTech(id, d) {
 }
 
 function allTechnicians() {
-  return [...TECHNICIANS, ...S.activeTechs];
+  return [...S.activeTechs];
 }
 
 const WA_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
@@ -355,8 +286,8 @@ const S = {
   profile: { selJob: null },
   signup: { done: false, tab: "editar" },
   auth: { user: null, loading: true, signingIn: false, error: "", menuOpen: false },
-  admin: { tab: "solicitudes", requests: [], rejectingId: null },
-  myTech: { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null },
+  admin: { tab: "solicitudes", requests: [], rejectingId: null, deletingId: null },
+  myTech: { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null, confirmingDelete: false },
   activeTechs: [],
 };
 
@@ -372,7 +303,7 @@ function clearRealtimeListeners() {
   if (unsubActiveTechs) { unsubActiveTechs(); unsubActiveTechs = null; }
   S.admin.requests = [];
   S.activeTechs = [];
-  S.myTech = { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null };
+  S.myTech = { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null, confirmingDelete: false };
 }
 
 function nav(target, id) {
@@ -641,7 +572,10 @@ function HomeHTML() {
           <button class="btn btn-outline" data-nav="list">Ver todos →</button>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
-          ${[...S.activeTechs, ...TECHNICIANS].slice(0, 3).map(t => TechCardHTML(t)).join("")}
+          ${S.activeTechs.length > 0
+            ? S.activeTechs.slice(0, 3).map(t => TechCardHTML(t)).join("")
+            : `<div class="card-flat" style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px;grid-column:1/-1">Todavía no hay técnicos activos en la plataforma. ¡Sé el primero en registrarte!</div>`
+          }
         </div>
       </div>
     </section>
@@ -745,11 +679,12 @@ function filteredTechnicians() {
 function TechResultsHTML() {
   const list = filteredTechnicians();
   if (list.length === 0) {
+    const noneAtAll = allTechnicians().length === 0;
     return `
       <div style="text-align:center;padding:60px 0;color:var(--muted)">
         <div style="font-size:40px;margin-bottom:12px">🔍</div>
-        <p>No se encontraron técnicos con esos filtros.</p>
-        <button class="btn btn-outline" style="margin-top:16px" data-filter-clear>Limpiar filtros</button>
+        <p>${noneAtAll ? "Todavía no hay técnicos registrados en TUCADI." : "No se encontraron técnicos con esos filtros."}</p>
+        ${noneAtAll ? "" : `<button class="btn btn-outline" style="margin-top:16px" data-filter-clear>Limpiar filtros</button>`}
       </div>`;
   }
   return `
@@ -874,7 +809,7 @@ function RequestHTML() {
 function ProfileHTML() {
   const tech = allTechnicians().find(t => t.id === S.eid);
   if (!tech) return "";
-  const reviews = REVIEWS[tech.id] || [];
+  const reviews = [];
   const selJob = S.profile.selJob;
   const expLabel = tech.experienceYears ? `${tech.experienceYears} años exp.` : (tech.experienceLabel || "Nuevo en TUCADI");
 
@@ -1220,6 +1155,21 @@ function MyProfileViewHTML(tech) {
     ${servicesBlock}
     ${zonesBlock}
     ${descBlock}
+
+    <div class="danger-zone">
+      ${S.myTech.confirmingDelete ? `
+        <p style="font-size:13px;color:#b91c1c;font-weight:600;margin-bottom:4px">¿Eliminar tu cuenta de técnico?</p>
+        <p style="font-size:12.5px;color:#7f1d1d;margin-bottom:12px">Se borrará tu perfil de TUCADI de forma permanente. Podrás volver a registrarte después si quieres.</p>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-danger" data-confirm-delete-account>Sí, eliminar mi cuenta</button>
+          <button class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-cancel-delete-account>Cancelar</button>
+        </div>
+      ` : `
+        <p style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">Eliminar cuenta de técnico</p>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Esto borra tu perfil de la plataforma de forma permanente.</p>
+        <button class="btn-danger" style="border-radius:8px;cursor:pointer;font-family:var(--fb);font-weight:600" data-toggle-delete-account>Eliminar mi cuenta</button>
+      `}
+    </div>
   </div>`;
 }
 
@@ -1360,22 +1310,66 @@ function AdminRequestCardHTML(r) {
   </div>`;
 }
 
+function AdminActiveTechCardHTML(t) {
+  const isDeleting = S.admin.deletingId === t.id;
+  return `
+  <div class="req-card">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px">
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="av" style="background:${t.avatarColor};width:40px;height:40px;font-size:14px">${t.avatar}</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:var(--navy)">${esc(t.name)}</div>
+          <div style="font-size:12px;color:var(--muted)">${esc(t.business || "")}</div>
+        </div>
+      </div>
+      <span class="status-pill sp-activo">Activo</span>
+    </div>
+    <div style="font-size:13px;color:var(--mid);margin-bottom:6px">📞 ${esc(t.phone || "—")} · ${esc(t.experienceLabel || "—")}</div>
+    <div style="margin-bottom:6px">${(t.services || []).map(s => `<span class="stag">${esc(s)}</span>`).join(" ")}</div>
+    <div style="margin-bottom:12px">${(t.zones || []).map(z => `<span class="zone-chip">${esc(z)}</span>`).join("")}</div>
+
+    ${isDeleting ? `
+      <div class="reject-form" style="background:#fef2f2;border-color:#fecaca">
+        <p style="font-size:13px;color:#b91c1c;font-weight:600;margin-bottom:10px">¿Eliminar a ${esc(t.name)}? Esta acción no se puede deshacer.</p>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-danger" data-confirm-delete-tech="${t.id}">Sí, eliminar</button>
+          <button class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-cancel-delete-tech>Cancelar</button>
+        </div>
+      </div>` : `
+      <button class="btn btn-danger" style="font-size:13px;padding:9px 16px" data-toggle-delete-tech="${t.id}">Eliminar técnico</button>`}
+  </div>`;
+}
+
 function AdminHTML() {
   const reqs = S.admin.requests;
+  const activeTechs = S.activeTechs;
   return `
   <div>
     <div style="background:var(--bg-warm);border-bottom:1px solid var(--border);padding:26px 16px">
       <div class="con">
         <h1 style="font-family:var(--fd);font-size:clamp(20px,3.5vw,28px);font-weight:700;color:var(--navy);margin-bottom:4px">Panel de administrador</h1>
-        <p style="font-size:13px;color:var(--mid)">Solicitudes de técnicos pendientes de revisión</p>
+        <p style="font-size:13px;color:var(--mid)">Gestión de técnicos de TUCADI</p>
       </div>
     </div>
 
     <div style="padding:20px 16px 56px">
       <div class="con" style="max-width:760px">
-        ${reqs.length === 0
-          ? `<div class="card-flat" style="padding:40px 24px;text-align:center;color:var(--muted);font-size:13px">No hay solicitudes pendientes por revisar.</div>`
-          : reqs.map(r => AdminRequestCardHTML(r)).join("")
+        <div class="tab-row" style="margin-bottom:20px">
+          <button class="tab-btn ${S.admin.tab === "solicitudes" ? "active" : ""}" data-admin-tab="solicitudes">
+            Solicitudes ${reqs.length > 0 ? `<span class="badge b-amber" style="margin-left:4px">${reqs.length}</span>` : ""}
+          </button>
+          <button class="tab-btn ${S.admin.tab === "activos" ? "active" : ""}" data-admin-tab="activos">
+            Técnicos activos ${activeTechs.length > 0 ? `<span class="badge b-green" style="margin-left:4px">${activeTechs.length}</span>` : ""}
+          </button>
+        </div>
+
+        ${S.admin.tab === "activos"
+          ? (activeTechs.length === 0
+              ? `<div class="card-flat" style="padding:40px 24px;text-align:center;color:var(--muted);font-size:13px">Aún no hay técnicos activos.</div>`
+              : activeTechs.map(t => AdminActiveTechCardHTML(t)).join(""))
+          : (reqs.length === 0
+              ? `<div class="card-flat" style="padding:40px 24px;text-align:center;color:var(--muted);font-size:13px">No hay solicitudes pendientes por revisar.</div>`
+              : reqs.map(r => AdminRequestCardHTML(r)).join(""))
         }
       </div>
     </div>
@@ -1503,6 +1497,7 @@ document.addEventListener("click", (e) => {
   if (adminTabEl) {
     S.admin.tab = adminTabEl.getAttribute("data-admin-tab");
     S.admin.rejectingId = null;
+    S.admin.deletingId = null;
     renderApp();
     return;
   }
@@ -1557,6 +1552,34 @@ document.addEventListener("click", (e) => {
     return;
   }
 
+  const toggleDeleteTechEl = e.target.closest("[data-toggle-delete-tech]");
+  if (toggleDeleteTechEl) {
+    S.admin.deletingId = toggleDeleteTechEl.getAttribute("data-toggle-delete-tech");
+    renderApp();
+    return;
+  }
+
+  const cancelDeleteTechEl = e.target.closest("[data-cancel-delete-tech]");
+  if (cancelDeleteTechEl) {
+    S.admin.deletingId = null;
+    renderApp();
+    return;
+  }
+
+  const confirmDeleteTechEl = e.target.closest("[data-confirm-delete-tech]");
+  if (confirmDeleteTechEl) {
+    const id = confirmDeleteTechEl.getAttribute("data-confirm-delete-tech");
+    confirmDeleteTechEl.disabled = true;
+    deleteDoc(doc(db, "tecnicos", id))
+      .then(() => { S.admin.deletingId = null; })
+      .catch(err => {
+        console.error("Error eliminando técnico:", err);
+        alert("No se pudo eliminar: " + (err.message || err.code || "error desconocido"));
+        confirmDeleteTechEl.disabled = false;
+      });
+    return;
+  }
+
   const toggleEditSectionEl = e.target.closest("[data-toggle-edit-section]");
   if (toggleEditSectionEl) {
     S.myTech.editSection = toggleEditSectionEl.getAttribute("data-toggle-edit-section");
@@ -1569,6 +1592,37 @@ document.addEventListener("click", (e) => {
   if (cancelEditSectionEl) {
     S.myTech.editSection = null;
     renderApp();
+    return;
+  }
+
+  const toggleDeleteAccountEl = e.target.closest("[data-toggle-delete-account]");
+  if (toggleDeleteAccountEl) {
+    S.myTech.confirmingDelete = true;
+    renderApp();
+    return;
+  }
+
+  const cancelDeleteAccountEl = e.target.closest("[data-cancel-delete-account]");
+  if (cancelDeleteAccountEl) {
+    S.myTech.confirmingDelete = false;
+    renderApp();
+    return;
+  }
+
+  const confirmDeleteAccountEl = e.target.closest("[data-confirm-delete-account]");
+  if (confirmDeleteAccountEl) {
+    if (!S.myTech.doc) return;
+    confirmDeleteAccountEl.disabled = true;
+    deleteDoc(doc(db, "tecnicos", S.myTech.doc.id))
+      .then(() => {
+        S.myTech.confirmingDelete = false;
+        nav("home");
+      })
+      .catch(err => {
+        console.error("Error eliminando cuenta de técnico:", err);
+        alert("No se pudo eliminar tu cuenta: " + (err.message || err.code || "error desconocido"));
+        confirmDeleteAccountEl.disabled = false;
+      });
     return;
   }
 
