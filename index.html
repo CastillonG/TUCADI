@@ -292,22 +292,26 @@ const S = {
   myTech: { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null, confirmingDelete: false },
   activeTechs: [],
   profileReviews: { techId: null, list: [], loading: false },
-  reviewForm: { adding: false, submitting: false },
+  reviewForm: { openRequestId: null, submitting: false },
+  myRequests: { list: [], loading: true },
 };
 
 let unsubAdminRequests = null;
 let unsubMyTech = null;
 let unsubMyNotifications = null;
 let unsubActiveTechs = null;
+let unsubMyRequests = null;
 
 function clearRealtimeListeners() {
   if (unsubAdminRequests) { unsubAdminRequests(); unsubAdminRequests = null; }
   if (unsubMyTech) { unsubMyTech(); unsubMyTech = null; }
   if (unsubMyNotifications) { unsubMyNotifications(); unsubMyNotifications = null; }
   if (unsubActiveTechs) { unsubActiveTechs(); unsubActiveTechs = null; }
+  if (unsubMyRequests) { unsubMyRequests(); unsubMyRequests = null; }
   S.admin.requests = [];
   S.activeTechs = [];
   S.myTech = { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null, confirmingDelete: false };
+  S.myRequests = { list: [], loading: true };
 }
 
 function nav(target, id) {
@@ -315,10 +319,10 @@ function nav(target, id) {
   if (target === "eval") S.request = { selectedJob: null };
   if (target === "profile") {
     S.profile.selJob = null;
-    S.reviewForm = { adding: false, submitting: false };
     if (id) fetchProfileReviews(id);
   }
   if (target === "signup") { S.signup.tab = "editar"; S.myTech.saved = false; S.myTech.editSection = null; }
+  if (target === "myservices") S.reviewForm.openRequestId = null;
   if (target === "admin") S.admin.rejectingId = null;
   S.page = target;
   renderApp();
@@ -345,7 +349,7 @@ async function fetchProfileReviews(techId) {
   }
 }
 
-async function submitReview(techId, rating, comment) {
+async function submitReview(techId, requestId, rating, comment) {
   const user = auth.currentUser;
   if (!user) return;
   S.reviewForm.submitting = true;
@@ -353,6 +357,7 @@ async function submitReview(techId, rating, comment) {
   try {
     await addDoc(collection(db, "resenas"), {
       technicianId: techId,
+      requestId,
       rating,
       comment: comment || "",
       clientName: user.displayName || "Cliente",
@@ -360,6 +365,8 @@ async function submitReview(techId, rating, comment) {
       clientUid: user.uid,
       createdAt: serverTimestamp(),
     });
+    // Marca la solicitud como reseñada para no permitir reseñas duplicadas.
+    await updateDoc(doc(db, "solicitudes_clientes", requestId), { reviewed: true });
     // Actualiza el promedio y conteo en el propio documento del técnico.
     await runTransaction(db, async (tx) => {
       const techRef = doc(db, "tecnicos", techId);
@@ -372,8 +379,7 @@ async function submitReview(techId, rating, comment) {
       const newAvg = (prevAvg * prevCount + rating) / newCount;
       tx.update(techRef, { reviewCount: newCount, ratingAvg: newAvg });
     });
-    S.reviewForm = { adding: false, submitting: false };
-    await fetchProfileReviews(techId);
+    S.reviewForm = { openRequestId: null, submitting: false };
   } catch (err) {
     console.error("Error guardando reseña:", err);
     alert("No se pudo guardar tu reseña: " + (err.message || err.code || "error desconocido"));
@@ -423,7 +429,7 @@ onAuthStateChanged(auth, (user) => {
     if (S.myTech.doc && S.myTech.doc.status === "activo") {
       const notifQ = query(
         collection(db, "solicitudes_clientes"),
-        where("technicianPhone", "==", S.myTech.doc.phone),
+        where("technicianId", "==", S.myTech.doc.id),
         limit(30)
       );
       unsubMyNotifications = onSnapshot(notifQ, (nSnap) => {
@@ -454,6 +460,18 @@ onAuthStateChanged(auth, (user) => {
     S.activeTechs = snap.docs.map(d => mapFirestoreTechToDisplayTech(d.id, d.data()));
     renderApp();
   }, (err) => console.error("Error leyendo directorio de técnicos:", err));
+
+  // Mis servicios: solicitudes que ESTE usuario ha hecho como cliente.
+  const myReqQ = query(collection(db, "solicitudes_clientes"), where("clientUid", "==", user.uid));
+  unsubMyRequests = onSnapshot(myReqQ, (snap) => {
+    S.myRequests = {
+      list: snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => jsDateMillis(b.createdAt) - jsDateMillis(a.createdAt)),
+      loading: false,
+    };
+    renderApp();
+  }, (err) => { console.error("Error leyendo mis servicios:", err); S.myRequests.loading = false; renderApp(); });
 });
 
 function LoginGateHTML() {
@@ -493,11 +511,13 @@ function NavHTML() {
 
   const profileLabel = S.myTech.doc ? "Mi perfil" : "Soy técnico";
   const isActiveTech = S.myTech.doc && S.myTech.doc.status === "activo";
-  const newNotifCount = isActiveTech ? S.myTech.notifications.filter(n => n.status === "nueva").length : 0;
-  const bellBtn = isActiveTech ? `
-    <button class="bell-btn" data-open-notifications title="Notificaciones de clientes">
+  const techNewNotifCount = isActiveTech ? S.myTech.notifications.filter(n => n.status === "nueva" || n.status === undefined).length : 0;
+  const clientPendingReviewCount = (S.myRequests.list || []).filter(r => r.status === "completado" && !r.reviewed).length;
+  const totalBellCount = techNewNotifCount + clientPendingReviewCount;
+  const bellBtn = (isActiveTech || clientPendingReviewCount > 0) ? `
+    <button class="bell-btn" data-open-notifications title="Notificaciones">
       ${BELL_SVG}
-      ${newNotifCount > 0 ? `<span class="bell-badge">${newNotifCount > 9 ? "9+" : newNotifCount}</span>` : ""}
+      ${totalBellCount > 0 ? `<span class="bell-badge">${totalBellCount > 9 ? "9+" : totalBellCount}</span>` : ""}
     </button>` : "";
 
   return `
@@ -506,6 +526,7 @@ function NavHTML() {
     <div class="nl" style="align-items:center">
       <button class="nlink" data-nav="list">Técnicos</button>
       <button class="nlink" data-nav="how">¿Cómo funciona?</button>
+      <button class="nlink" data-nav="myservices">Mis servicios</button>
       <button class="ncta" data-nav="signup">${profileLabel}</button>
       ${isAdmin(user) ? `<button class="nlink" data-nav="admin">Admin</button>` : ""}
       ${bellBtn}
@@ -921,28 +942,12 @@ function ProfileHTML() {
       </div>
     </div>` : "";
 
-  const isOwnProfile = S.myTech.doc && S.myTech.doc.id === tech.id;
   const reviewsData = (S.profileReviews.techId === tech.id) ? S.profileReviews : { list: [], loading: true };
-
-  const reviewFormBlock = isOwnProfile ? "" : (S.reviewForm.adding ? `
-    <div class="card-flat" style="padding:18px 20px;margin-bottom:14px">
-      <label class="lbl">Tu calificación *</label>
-      <div id="reviewStars" data-rating="0" style="display:flex;gap:6px;margin:8px 0 14px">
-        ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="star-btn" data-star="${n}" style="background:none;border:none;cursor:pointer;font-size:26px;color:var(--border);line-height:1">★</button>`).join("")}
-      </div>
-      <label class="lbl">Comentario (opcional)</label>
-      <textarea class="inp" id="reviewComment" placeholder="Cuéntale a otros cómo te fue con este técnico" style="margin:8px 0 14px;min-height:70px"></textarea>
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-navy" style="font-size:13px;padding:9px 16px" ${S.reviewForm.submitting ? "disabled" : ""} data-submit-review="${tech.id}">${S.reviewForm.submitting ? "Enviando..." : "Enviar reseña"}</button>
-        <button type="button" class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-cancel-review>Cancelar</button>
-      </div>
-    </div>` : `
-    <button class="btn btn-outline" style="font-size:13px;padding:9px 16px;margin-bottom:14px" data-toggle-review-form>✎ Dejar una reseña</button>`);
 
   const reviewsListBlock = reviewsData.loading ? `
     <div class="card-flat" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Cargando reseñas…</div>`
     : reviewsData.list.length === 0 ? `
-    <div class="card-flat" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Este técnico todavía no tiene reseñas. ¡Sé el primero en dejar una!</div>`
+    <div class="card-flat" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Este técnico todavía no tiene reseñas.</div>`
     : `
     <div style="display:flex;flex-direction:column;gap:12px">
       ${reviewsData.list.map(r => `
@@ -957,7 +962,7 @@ function ProfileHTML() {
 
   const reviewsBlock = `
     <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:14px">Reseñas ${tech.reviewCount > 0 ? `(${tech.reviewCount})` : ""}</h2>
-    ${reviewFormBlock}
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Solo clientes con un servicio marcado como terminado por este técnico pueden dejar reseña — revisa "Mis servicios" en tu perfil.</p>
     ${reviewsListBlock}`;
 
   return `
@@ -1104,6 +1109,13 @@ function RegistrationFormHTML(existing) {
   </form>`;
 }
 
+function notifStatusLabel(status) {
+  if (status === "completado") return { label: "Completado", cls: "sp-activo" };
+  if (status === "en_proceso") return { label: "En proceso", cls: "sp-pendiente" };
+  if (status === "atendida") return { label: "Atendida", cls: "sp-activo" }; // valor antiguo, por compatibilidad
+  return { label: "Nueva", cls: "sp-pendiente" };
+}
+
 function NotificationsHTML() {
   const notifs = S.myTech.notifications || [];
   if (notifs.length === 0) {
@@ -1114,18 +1126,94 @@ function NotificationsHTML() {
   }
   return `
   <div>
-    ${notifs.map(n => `
-      <div class="notif-card ${n.status === "nueva" ? "nueva" : ""}">
+    ${notifs.map(n => {
+      const st = notifStatusLabel(n.status);
+      const isOpen = n.status === "nueva" || n.status === undefined;
+      const isInProgress = n.status === "en_proceso";
+      const isDone = n.status === "completado";
+      return `
+      <div class="notif-card ${isOpen ? "nueva" : ""}">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:6px">
           <div>
             <div style="font-weight:600;font-size:14px;color:var(--navy)">${esc(n.clientName || "Cliente")}</div>
             <div style="font-size:12px;color:var(--muted)">${esc(n.jobName || "Consulta general")}${n.jobPrice ? " · " + fmt(n.jobPrice) : ""}</div>
           </div>
-          <span class="status-pill ${n.status === "nueva" ? "sp-pendiente" : "sp-activo"}">${n.status === "nueva" ? "Nueva" : "Atendida"}</span>
+          <span class="status-pill ${st.cls}">${st.label}</span>
         </div>
         ${n.description ? `<p style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:10px">${esc(n.description)}</p>` : ""}
-        ${n.status === "nueva" ? `<button class="btn btn-outline" style="font-size:12px;padding:7px 12px" data-mark-notif-atendida="${n.id}">Marcar como atendida</button>` : ""}
-      </div>`).join("")}
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${isOpen ? `<button class="btn btn-outline" style="font-size:12px;padding:7px 12px" data-set-notif-status="${n.id}|en_proceso">Marcar en proceso</button>` : ""}
+          ${(isOpen || isInProgress) ? `<button class="btn btn-navy" style="font-size:12px;padding:7px 12px" data-set-notif-status="${n.id}|completado">✓ Marcar como terminado</button>` : ""}
+          ${isDone ? `<span style="font-size:12px;color:var(--green);font-weight:600">✓ Servicio terminado — el cliente ya puede dejar su reseña</span>` : ""}
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+function serviceStatusInfo(status) {
+  if (status === "completado") return { label: "Terminado", cls: "sp-activo" };
+  if (status === "en_proceso") return { label: "En proceso", cls: "sp-pendiente" };
+  if (status === "atendida") return { label: "Atendida", cls: "sp-activo" };
+  return { label: "Solicitado", cls: "sp-pendiente" };
+}
+
+function MyServiceCardHTML(r) {
+  const st = serviceStatusInfo(r.status);
+  const canReview = r.status === "completado" && !r.reviewed;
+  const isReviewing = S.reviewForm.openRequestId === r.id;
+
+  const reviewSection = r.reviewed ? `
+    <p style="font-size:12px;color:var(--green);font-weight:600;margin-top:10px">✓ Ya dejaste tu reseña</p>`
+    : canReview ? (isReviewing ? `
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <label class="lbl">Tu calificación *</label>
+        <div id="reviewStars" data-rating="0" style="display:flex;gap:6px;margin:8px 0 14px">
+          ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="star-btn" data-star="${n}" style="background:none;border:none;cursor:pointer;font-size:26px;color:var(--border);line-height:1">★</button>`).join("")}
+        </div>
+        <textarea class="inp" id="reviewComment" placeholder="Cuéntale a otros cómo te fue con este técnico" style="margin-bottom:14px;min-height:70px"></textarea>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-navy" style="font-size:13px;padding:9px 16px" ${S.reviewForm.submitting ? "disabled" : ""} data-submit-review="${r.id}|${r.technicianId}">${S.reviewForm.submitting ? "Enviando..." : "Enviar reseña"}</button>
+          <button type="button" class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-cancel-review>Cancelar</button>
+        </div>
+      </div>` : `
+      <button class="btn btn-outline" style="font-size:13px;padding:9px 16px;margin-top:12px" data-toggle-review-form="${r.id}">✎ Dejar una reseña</button>`)
+    : (r.status !== "completado" ? `
+      <p style="font-size:12px;color:var(--muted);margin-top:10px">Podrás dejar tu reseña cuando el técnico marque el servicio como terminado.</p>` : "");
+
+  return `
+  <div class="req-card">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:6px">
+      <div>
+        <div style="font-weight:700;font-size:15px;color:var(--navy)">${esc(r.technicianName || "Técnico")}</div>
+        <div style="font-size:12px;color:var(--muted)">${esc(r.jobName || "Consulta general")}${r.jobPrice ? " · " + fmt(r.jobPrice) : ""}</div>
+      </div>
+      <span class="status-pill ${st.cls}">${st.label}</span>
+    </div>
+    ${r.description ? `<p style="font-size:13px;color:var(--mid);line-height:1.6">${esc(r.description)}</p>` : ""}
+    ${r.technicianId ? `<button class="btn btn-ghost" style="padding:0;font-size:12px;color:var(--blue);margin-top:6px" data-nav="profile" data-id="${r.technicianId}">Ver perfil del técnico →</button>` : ""}
+    ${reviewSection}
+  </div>`;
+}
+
+function MyServicesHTML() {
+  const list = S.myRequests.list || [];
+  return `
+  <div>
+    <div style="background:var(--bg-warm);border-bottom:1px solid var(--border);padding:26px 16px">
+      <div class="con">
+        <h1 style="font-family:var(--fd);font-size:clamp(20px,3.5vw,28px);font-weight:700;color:var(--navy);margin-bottom:4px">Mis servicios</h1>
+        <p style="font-size:13px;color:var(--mid)">Solicitudes que has hecho a técnicos en TUCADI</p>
+      </div>
+    </div>
+    <div style="padding:20px 16px 56px">
+      <div class="con" style="max-width:640px">
+        ${S.myRequests.loading ? `<div class="card-flat" style="padding:40px 24px;text-align:center;color:var(--muted);font-size:13px">Cargando…</div>`
+          : list.length === 0 ? `<div class="card-flat" style="padding:40px 24px;text-align:center;color:var(--muted);font-size:13px">Aún no has solicitado ningún servicio. Ve a "Técnicos" para empezar.</div>`
+          : list.map(r => MyServiceCardHTML(r)).join("")
+        }
+      </div>
+    </div>
   </div>`;
 }
 
@@ -1476,6 +1564,7 @@ function pageHTML() {
     case "eval": return RequestHTML();
     case "signup": return SignupHTML();
     case "admin": return isAdmin(S.auth.user) ? AdminHTML() : HomeHTML();
+    case "myservices": return MyServicesHTML();
     default: return HomeHTML();
   }
 }
@@ -1526,8 +1615,14 @@ document.addEventListener("click", (e) => {
 
   const bellEl = e.target.closest("[data-open-notifications]");
   if (bellEl) {
-    S.signup.tab = "notificaciones";
-    S.page = "signup";
+    const isActiveTech = S.myTech.doc && S.myTech.doc.status === "activo";
+    const techNewNotifCount = isActiveTech ? S.myTech.notifications.filter(n => n.status === "nueva" || n.status === undefined).length : 0;
+    if (techNewNotifCount > 0) {
+      S.signup.tab = "notificaciones";
+      S.page = "signup";
+    } else {
+      S.page = "myservices";
+    }
     renderApp();
     window.scrollTo({ top: 0, behavior: "smooth" });
     return;
@@ -1558,10 +1653,11 @@ document.addEventListener("click", (e) => {
     const desc = document.getElementById("reqDesc")?.value || "";
     window.open(buildWaLink(tech, job, desc), "_blank", "noopener");
 
-    // Registra la solicitud para que el técnico la vea en "Mi perfil → Notificaciones",
-    // si su perfil real en Firestore usa este mismo teléfono.
+    // Registra la solicitud para que el técnico la vea en "Mi perfil → Notificaciones"
+    // y el cliente en "Mis servicios", con estatus que se actualiza conforme avanza.
     const clientUser = auth.currentUser;
     addDoc(collection(db, "solicitudes_clientes"), {
+      technicianId: tech.id,
       technicianPhone: tech.phone,
       technicianName: tech.name,
       jobName: job ? job.name : null,
@@ -1571,6 +1667,7 @@ document.addEventListener("click", (e) => {
       clientEmail: clientUser ? (clientUser.email || "") : "",
       clientUid: clientUser ? clientUser.uid : null,
       status: "nueva",
+      reviewed: false,
       createdAt: serverTimestamp(),
     }).catch(err => console.error("Error guardando notificación de cliente:", err));
     return;
@@ -1633,12 +1730,14 @@ document.addEventListener("click", (e) => {
     return;
   }
 
-  const markNotifEl = e.target.closest("[data-mark-notif-atendida]");
-  if (markNotifEl) {
-    const id = markNotifEl.getAttribute("data-mark-notif-atendida");
-    markNotifEl.disabled = true;
-    updateDoc(doc(db, "solicitudes_clientes", id), { status: "atendida" })
-      .catch(err => console.error("Error actualizando notificación:", err));
+  const setNotifStatusEl = e.target.closest("[data-set-notif-status]");
+  if (setNotifStatusEl) {
+    const [id, newStatus] = setNotifStatusEl.getAttribute("data-set-notif-status").split("|");
+    setNotifStatusEl.disabled = true;
+    const payload = { status: newStatus };
+    if (newStatus === "completado") payload.completedAt = serverTimestamp();
+    updateDoc(doc(db, "solicitudes_clientes", id), payload)
+      .catch(err => { console.error("Error actualizando notificación:", err); setNotifStatusEl.disabled = false; });
     return;
   }
 
@@ -1672,14 +1771,14 @@ document.addEventListener("click", (e) => {
 
   const toggleReviewFormEl = e.target.closest("[data-toggle-review-form]");
   if (toggleReviewFormEl) {
-    S.reviewForm.adding = true;
+    S.reviewForm.openRequestId = toggleReviewFormEl.getAttribute("data-toggle-review-form");
     renderApp();
     return;
   }
 
   const cancelReviewEl = e.target.closest("[data-cancel-review]");
   if (cancelReviewEl) {
-    S.reviewForm.adding = false;
+    S.reviewForm.openRequestId = null;
     renderApp();
     return;
   }
@@ -1700,12 +1799,12 @@ document.addEventListener("click", (e) => {
 
   const submitReviewEl = e.target.closest("[data-submit-review]");
   if (submitReviewEl) {
-    const techId = submitReviewEl.getAttribute("data-submit-review");
+    const [requestId, techId] = submitReviewEl.getAttribute("data-submit-review").split("|");
     const container = document.getElementById("reviewStars");
     const rating = container ? parseInt(container.dataset.rating, 10) : 0;
     const comment = document.getElementById("reviewComment")?.value.trim() || "";
     if (!rating || rating < 1) { alert("Selecciona una calificación de 1 a 5 estrellas."); return; }
-    submitReview(techId, rating, comment);
+    submitReview(techId, requestId, rating, comment);
     return;
   }
 
