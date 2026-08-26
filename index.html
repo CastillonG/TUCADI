@@ -154,6 +154,7 @@
   .danger-zone{border:1px solid #fecaca;background:#fef2f2;border-radius:var(--r);padding:16px 18px;margin-top:24px}
   .btn-danger{background:white;color:#b91c1c;border:1.5px solid #fca5a5;padding:10px 16px;font-size:13px}
   .btn-danger:hover{background:#fee2e2}
+  .star-btn.selected{color:var(--amber-light) !important}
 </style>
 </head>
 <body>
@@ -166,7 +167,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, serverTimestamp,
-  query, where, onSnapshot, doc, updateDoc, deleteDoc, limit,
+  query, where, onSnapshot, doc, updateDoc, deleteDoc, limit, getDocs, runTransaction,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut,
@@ -239,12 +240,13 @@ function colorForName(name) {
 // no tienen aún calificación ni trabajos con precio fijo — se muestran como
 // "Nuevo en TUCADI" y permiten solicitar cotización directa.
 function mapFirestoreTechToDisplayTech(id, d) {
+  const reviewCount = d.reviewCount || 0;
   return {
     id,
     name: d.name || "Técnico",
     business: d.business || "",
-    rating: null,
-    reviewCount: 0,
+    rating: reviewCount > 0 ? Math.round((d.ratingAvg || 0) * 10) / 10 : null,
+    reviewCount,
     experienceYears: null,
     experienceLabel: d.experience || "",
     services: d.services || [],
@@ -289,6 +291,8 @@ const S = {
   admin: { tab: "solicitudes", requests: [], rejectingId: null, deletingId: null },
   myTech: { doc: null, loading: true, notifications: [], saving: false, saved: false, editSection: null, confirmingDelete: false },
   activeTechs: [],
+  profileReviews: { techId: null, list: [], loading: false },
+  reviewForm: { adding: false, submitting: false },
 };
 
 let unsubAdminRequests = null;
@@ -309,12 +313,73 @@ function clearRealtimeListeners() {
 function nav(target, id) {
   if (id !== undefined && id !== null) S.eid = id;
   if (target === "eval") S.request = { selectedJob: null };
-  if (target === "profile") S.profile.selJob = null;
+  if (target === "profile") {
+    S.profile.selJob = null;
+    S.reviewForm = { adding: false, submitting: false };
+    if (id) fetchProfileReviews(id);
+  }
   if (target === "signup") { S.signup.tab = "editar"; S.myTech.saved = false; S.myTech.editSection = null; }
   if (target === "admin") S.admin.rejectingId = null;
   S.page = target;
   renderApp();
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ─── RESEÑAS ─────────────────────────────────────────────────────────────────────
+async function fetchProfileReviews(techId) {
+  S.profileReviews = { techId, list: [], loading: true };
+  renderApp();
+  try {
+    const snap = await getDocs(query(collection(db, "resenas"), where("technicianId", "==", techId)));
+    const list = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => jsDateMillis(b.createdAt) - jsDateMillis(a.createdAt));
+    if (S.profileReviews.techId === techId) {
+      S.profileReviews = { techId, list, loading: false };
+      renderApp();
+    }
+  } catch (err) {
+    console.error("Error leyendo reseñas:", err);
+    S.profileReviews = { techId, list: [], loading: false };
+    renderApp();
+  }
+}
+
+async function submitReview(techId, rating, comment) {
+  const user = auth.currentUser;
+  if (!user) return;
+  S.reviewForm.submitting = true;
+  renderApp();
+  try {
+    await addDoc(collection(db, "resenas"), {
+      technicianId: techId,
+      rating,
+      comment: comment || "",
+      clientName: user.displayName || "Cliente",
+      clientEmail: user.email || "",
+      clientUid: user.uid,
+      createdAt: serverTimestamp(),
+    });
+    // Actualiza el promedio y conteo en el propio documento del técnico.
+    await runTransaction(db, async (tx) => {
+      const techRef = doc(db, "tecnicos", techId);
+      const techSnap = await tx.get(techRef);
+      if (!techSnap.exists()) return;
+      const data = techSnap.data();
+      const prevCount = data.reviewCount || 0;
+      const prevAvg = data.ratingAvg || 0;
+      const newCount = prevCount + 1;
+      const newAvg = (prevAvg * prevCount + rating) / newCount;
+      tx.update(techRef, { reviewCount: newCount, ratingAvg: newAvg });
+    });
+    S.reviewForm = { adding: false, submitting: false };
+    await fetchProfileReviews(techId);
+  } catch (err) {
+    console.error("Error guardando reseña:", err);
+    alert("No se pudo guardar tu reseña: " + (err.message || err.code || "error desconocido"));
+    S.reviewForm.submitting = false;
+    renderApp();
+  }
 }
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────────
@@ -851,24 +916,49 @@ function ProfileHTML() {
   const statsBlock = tech.rating != null ? `
     <div class="card-flat" style="padding:16px 20px;margin-bottom:16px">
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
-        ${[["⭐ " + tech.rating, "Calificación"], [tech.reviewCount, "Reseñas"], [(tech.experienceYears + " años"), "Experiencia"]].map(([v, l]) => `
+        ${[["⭐ " + tech.rating, "Calificación"], [tech.reviewCount, "Reseñas"], [(tech.experienceYears ? tech.experienceYears + " años" : (tech.experienceLabel || "—")), "Experiencia"]].map(([v, l]) => `
           <div><div style="font-family:var(--fd);font-size:17px;font-weight:700;color:var(--navy)">${v}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${l}</div></div>`).join("")}
       </div>
     </div>` : "";
 
-  const reviewsBlock = tech.rating != null ? `
-    <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:14px">Reseñas (${reviews.length})</h2>
+  const isOwnProfile = S.myTech.doc && S.myTech.doc.id === tech.id;
+  const reviewsData = (S.profileReviews.techId === tech.id) ? S.profileReviews : { list: [], loading: true };
+
+  const reviewFormBlock = isOwnProfile ? "" : (S.reviewForm.adding ? `
+    <div class="card-flat" style="padding:18px 20px;margin-bottom:14px">
+      <label class="lbl">Tu calificación *</label>
+      <div id="reviewStars" data-rating="0" style="display:flex;gap:6px;margin:8px 0 14px">
+        ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="star-btn" data-star="${n}" style="background:none;border:none;cursor:pointer;font-size:26px;color:var(--border);line-height:1">★</button>`).join("")}
+      </div>
+      <label class="lbl">Comentario (opcional)</label>
+      <textarea class="inp" id="reviewComment" placeholder="Cuéntale a otros cómo te fue con este técnico" style="margin:8px 0 14px;min-height:70px"></textarea>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-navy" style="font-size:13px;padding:9px 16px" ${S.reviewForm.submitting ? "disabled" : ""} data-submit-review="${tech.id}">${S.reviewForm.submitting ? "Enviando..." : "Enviar reseña"}</button>
+        <button type="button" class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-cancel-review>Cancelar</button>
+      </div>
+    </div>` : `
+    <button class="btn btn-outline" style="font-size:13px;padding:9px 16px;margin-bottom:14px" data-toggle-review-form>✎ Dejar una reseña</button>`);
+
+  const reviewsListBlock = reviewsData.loading ? `
+    <div class="card-flat" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Cargando reseñas…</div>`
+    : reviewsData.list.length === 0 ? `
+    <div class="card-flat" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Este técnico todavía no tiene reseñas. ¡Sé el primero en dejar una!</div>`
+    : `
     <div style="display:flex;flex-direction:column;gap:12px">
-      ${reviews.map(r => `
+      ${reviewsData.list.map(r => `
         <div class="card-flat" style="padding:15px 18px">
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-            <span style="font-weight:600;font-size:14px;color:var(--navy)">${esc(r.userName)}</span>
-            <span style="color:var(--amber-light);font-size:13px">${"★".repeat(r.rating)}</span>
+            <span style="font-weight:600;font-size:14px;color:var(--navy)">${esc(r.clientName || "Cliente")}</span>
+            <span style="color:var(--amber-light);font-size:13px">${"★".repeat(r.rating || 0)}</span>
           </div>
-          <p style="font-size:13px;color:var(--mid);line-height:1.7">${esc(r.comment)}</p>
+          ${r.comment ? `<p style="font-size:13px;color:var(--mid);line-height:1.7">${esc(r.comment)}</p>` : ""}
         </div>`).join("")}
-    </div>` : `
-    <div class="card-flat" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Este técnico es nuevo en TUCADI y todavía no tiene reseñas.</div>`;
+    </div>`;
+
+  const reviewsBlock = `
+    <h2 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:14px">Reseñas ${tech.reviewCount > 0 ? `(${tech.reviewCount})` : ""}</h2>
+    ${reviewFormBlock}
+    ${reviewsListBlock}`;
 
   return `
   <div class="has-wafloat">
@@ -1577,6 +1667,45 @@ document.addEventListener("click", (e) => {
         alert("No se pudo eliminar: " + (err.message || err.code || "error desconocido"));
         confirmDeleteTechEl.disabled = false;
       });
+    return;
+  }
+
+  const toggleReviewFormEl = e.target.closest("[data-toggle-review-form]");
+  if (toggleReviewFormEl) {
+    S.reviewForm.adding = true;
+    renderApp();
+    return;
+  }
+
+  const cancelReviewEl = e.target.closest("[data-cancel-review]");
+  if (cancelReviewEl) {
+    S.reviewForm.adding = false;
+    renderApp();
+    return;
+  }
+
+  const starBtnEl = e.target.closest("[data-star]");
+  if (starBtnEl) {
+    const n = parseInt(starBtnEl.getAttribute("data-star"), 10);
+    const container = document.getElementById("reviewStars");
+    if (container) {
+      container.dataset.rating = String(n);
+      container.querySelectorAll("[data-star]").forEach(btn => {
+        const v = parseInt(btn.getAttribute("data-star"), 10);
+        btn.classList.toggle("selected", v <= n);
+      });
+    }
+    return;
+  }
+
+  const submitReviewEl = e.target.closest("[data-submit-review]");
+  if (submitReviewEl) {
+    const techId = submitReviewEl.getAttribute("data-submit-review");
+    const container = document.getElementById("reviewStars");
+    const rating = container ? parseInt(container.dataset.rating, 10) : 0;
+    const comment = document.getElementById("reviewComment")?.value.trim() || "";
+    if (!rating || rating < 1) { alert("Selecciona una calificación de 1 a 5 estrellas."); return; }
+    submitReview(techId, rating, comment);
     return;
   }
 
