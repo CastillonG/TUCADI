@@ -177,7 +177,7 @@ const googleProvider = new GoogleAuthProvider();
 
 // ─── ADMINISTRADORES ────────────────────────────────────────────────────────────
 // Estas cuentas ven la pestaña "Admin" y pueden aprobar/rechazar técnicos.
-const ADMIN_EMAILS = ["ricardo.cruxx@gmail.com", "angelcastillongg@mail.com"];
+const ADMIN_EMAILS = ["ricardo.cruxx@gmail.com", "angelcastillongg@gmail.com"];
 const isAdmin = (user) => !!user && ADMIN_EMAILS.includes((user.email || "").toLowerCase());
 
 // ─── FASE ACTUAL: VALIDACIÓN, SIN COSTO ────────────────────────────────────────
