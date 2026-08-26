@@ -834,7 +834,18 @@ function SignupHTML() {
   }
 
   const svcs = ["Instalación", "Reparación", "Mantenimiento"];
-  const zoneOpts = ["Centro / Pitic", "Villa del Real / Perisur", "Lomas de Hermosillo / Bugambilias", "San Benito / Proyecto Río", "Colonia Prados / Bachoco", "Periférico / Solidaridad", "Toda la ciudad"];
+  const zoneOpts = [
+    { key: "centro-pitic", label: "Centro / Pitic", sub: "Centro, Pitic, Constitución, Modelo, San Benito" },
+    { key: "norte-bugambilias", label: "Norte / Bugambilias / Lomas de Hermosillo", sub: "Bugambilias, Lomas de Hermosillo, Las Minitas, Fuentes del Mezquital" },
+    { key: "poniente-kino", label: "Poniente / Kino / Las Quintas", sub: "Kino, Las Quintas, Los Arcos, Valle Verde" },
+    { key: "sur-villaseris", label: "Sur / Villa de Seris / Los Olivos", sub: "Villa de Seris, Los Olivos, Las Palmas del Sur, Altares" },
+    { key: "oriente-villadelreal", label: "Oriente / Villa del Real / Perisur", sub: "Villa del Real, Perisur, Las Colonitas, El Sahuaro" },
+    { key: "sureste-realdelsol", label: "Sureste / Real del Sol / Los Encinos", sub: "Real del Sol, Los Encinos, Real de Bugambilias, Balderrama" },
+    { key: "norponiente-solidaridad", label: "Norponiente / Solidaridad / Palo Verde", sub: "Solidaridad, Palo Verde, Puerta Real, Fuentes de Anza" },
+    { key: "noreste-countryclub", label: "Noreste / Country Club / Las Palmas", sub: "Country Club, Las Palmas, Nuevo Hermosillo, San Ángel" },
+    { key: "universidad-cincodemayo", label: "Universidad / Cinco de Mayo / Reforma", sub: "Cinco de Mayo, Reforma, Centenario, Las Águilas" },
+    { key: "periferico", label: "Periférico / colonias periféricas", sub: "Fraccionamientos y ejidos de reciente crecimiento en los márgenes de la ciudad" },
+  ];
   const expOpts = ["1 año", "2–3 años", "4–6 años", "7–10 años", "Más de 10 años"];
 
   return `
@@ -849,7 +860,7 @@ function SignupHTML() {
 
     <div style="padding:20px 16px 56px">
       <div class="con" style="max-width:580px">
-        <div class="alert al-info" style="margin-bottom:20px">💡 Estamos en fase de prueba: registro gratis, sin comisión ni fee. Solo queremos validar si el modelo te sirve antes de construir esa parte.</div>
+        <div class="alert al-info" style="margin-bottom:20px">💡 Estamos en fase de prueba: registro gratis, sin comisión. Solo queremos validar si el modelo te sirve antes de construir esa parte.</div>
 
         <form class="card-flat" style="padding:22px 18px" id="signupForm">
           <div style="display:flex;flex-direction:column;gap:16px">
@@ -863,19 +874,43 @@ function SignupHTML() {
                 ${expOpts.map(o => `<option>${o}</option>`).join("")}
               </select>
             </div>
+
+            <div>
+              <label class="lbl">Categoría de servicio *</label>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px">
+                ${CATEGORIES.map(c => `
+                  <button type="button" class="cat-card" style="width:auto;padding:12px 8px;${c.active ? "" : "opacity:.5"}" ${c.active ? `data-category-select="${c.label}"` : "disabled"}>
+                    <div class="cat-icon" style="width:38px;height:38px;background:${c.active ? "rgba(212,134,11,.12)" : "var(--bg-warm)"};color:${c.active ? "var(--amber)" : "var(--muted)"}">${c.icon}</div>
+                    <span class="cat-name" style="font-size:11.5px">${c.label}</span>
+                    ${c.active ? `<span class="cat-tag" style="color:var(--green)">Seleccionado</span>` : `<span class="cat-tag">Próximamente</span>`}
+                  </button>`).join("")}
+              </div>
+              <input type="hidden" name="category" value="Aire acondicionado">
+            </div>
+
             <div>
               <label class="lbl">Servicios que ofreces *</label>
               <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
-                ${svcs.map(s => `<button type="button" class="svc-btn" data-service-toggle="${s}">${s}</button>`).join("")}
+                ${svcs.map(s => `<button type="button" class="svc-btn" data-service-toggle="${esc(s)}">${esc(s)}</button>`).join("")}
+                <button type="button" class="svc-btn" id="svcOtherToggle" data-service-toggle="Otro">Otro</button>
+              </div>
+              <input class="inp" id="svcOtherInput" placeholder="Describe el servicio adicional que ofreces" style="margin-top:10px;display:none" name="serviceOther">
+            </div>
+
+            <div>
+              <label class="lbl">Zona(s) de cobertura * <span style="font-weight:400;color:var(--muted)">(elige una o varias)</span></label>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+                ${zoneOpts.map(z => `
+                  <label class="card-flat" style="display:flex;gap:10px;align-items:flex-start;padding:11px 14px;cursor:pointer">
+                    <input type="checkbox" name="zone" value="${esc(z.label)}" style="margin-top:3px;flex-shrink:0">
+                    <span>
+                      <span style="display:block;font-weight:600;font-size:13.5px;color:var(--navy)">${esc(z.label)}</span>
+                      <span style="display:block;font-size:12px;color:var(--muted);margin-top:2px">${esc(z.sub)}</span>
+                    </span>
+                  </label>`).join("")}
               </div>
             </div>
-            <div>
-              <label class="lbl">Zona de cobertura *</label>
-              <select class="sel" required name="zone">
-                <option value="">Selecciona tu zona...</option>
-                ${zoneOpts.map(o => `<option>${o}</option>`).join("")}
-              </select>
-            </div>
+
             <div><label class="lbl">Cuéntanos sobre tu trabajo</label><textarea class="inp" placeholder="Marcas que manejas, tus especialidades, garantías que ofreces..." name="description"></textarea></div>
             <button type="submit" class="btn btn-navy full" style="padding:14px;font-size:15px">Enviar solicitud →</button>
             <p style="font-size:12px;color:var(--muted);text-align:center">Registro gratuito. Te contactamos para activar tu perfil.</p>
@@ -990,6 +1025,21 @@ document.addEventListener("click", (e) => {
   const svcToggleEl = e.target.closest("[data-service-toggle]");
   if (svcToggleEl) {
     svcToggleEl.classList.toggle("selected");
+    if (svcToggleEl.id === "svcOtherToggle") {
+      const otherInput = document.getElementById("svcOtherInput");
+      if (otherInput) {
+        const show = svcToggleEl.classList.contains("selected");
+        otherInput.style.display = show ? "block" : "none";
+        if (show) otherInput.focus();
+        else otherInput.value = "";
+      }
+    }
+    return;
+  }
+
+  const catSelectEl = e.target.closest("[data-category-select]");
+  if (catSelectEl) {
+    // Solo hay una categoría activa por ahora (Aire acondicionado); no hace falta alternar.
     return;
   }
 });
@@ -1013,8 +1063,19 @@ document.addEventListener("submit", async (e) => {
 
   const form = e.target;
   const submitBtn = form.querySelector('button[type="submit"]');
-  const selectedServices = Array.from(form.querySelectorAll("[data-service-toggle].selected"))
+  let selectedServices = Array.from(form.querySelectorAll("[data-service-toggle].selected"))
     .map(b => b.getAttribute("data-service-toggle"));
+  const otherText = form.serviceOther ? form.serviceOther.value.trim() : "";
+  if (selectedServices.includes("Otro")) {
+    selectedServices = selectedServices.filter(s => s !== "Otro");
+    if (otherText) selectedServices.push(otherText);
+  }
+  const selectedZones = Array.from(form.querySelectorAll('input[name="zone"]:checked')).map(cb => cb.value);
+
+  if (selectedZones.length === 0) {
+    alert("Selecciona al menos una zona de cobertura.");
+    return;
+  }
 
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Enviando..."; }
 
@@ -1024,8 +1085,9 @@ document.addEventListener("submit", async (e) => {
       business: form.business.value.trim(),
       phone: form.phone.value.trim(),
       experience: form.experience.value,
+      category: form.category.value,
       services: selectedServices,
-      zone: form.zone.value,
+      zones: selectedZones,
       description: form.description.value.trim(),
       status: "pendiente",
       createdAt: serverTimestamp(),
