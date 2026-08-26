@@ -129,6 +129,20 @@
   .user-menu{position:absolute;top:48px;right:0;background:white;border:1px solid var(--border);border-radius:var(--rs);box-shadow:var(--shadow-lg);min-width:180px;z-index:110;overflow:hidden}
   .user-menu button{width:100%;text-align:left;padding:11px 14px;font-size:13px;background:none;border:none;cursor:pointer;color:var(--mid)}
   .user-menu button:hover{background:var(--bg-warm);color:var(--navy)}
+
+  /* ─── ADMIN / MI PERFIL ─── */
+  .tab-row{display:flex;gap:6px;border-bottom:1px solid var(--border)}
+  .tab-btn{padding:11px 16px;font-size:13.5px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px}
+  .tab-btn.active{color:var(--navy);border-bottom-color:var(--amber)}
+  .req-card{border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;background:white;margin-bottom:12px}
+  .zone-chip{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;background:var(--blue-bg);color:var(--blue);display:inline-block;margin:2px 4px 2px 0}
+  .reject-form{margin-top:12px;padding:14px;background:var(--warn-bg);border:1px solid #fde68a;border-radius:var(--rs)}
+  .status-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+  .sp-pendiente{background:var(--warn-bg);color:var(--warn)}
+  .sp-activo{background:var(--green-bg);color:var(--green)}
+  .sp-rechazado{background:#fee2e2;color:#b91c1c}
+  .notif-card{border:1px solid var(--border);border-radius:var(--rs);padding:13px 16px;background:white;margin-bottom:10px}
+  .notif-card.nueva{border-left:3px solid var(--amber)}
 </style>
 </head>
 <body>
@@ -141,6 +155,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, serverTimestamp,
+  query, where, orderBy, onSnapshot, doc, updateDoc, limit,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut,
@@ -159,6 +174,11 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 const auth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
+
+// ─── ADMINISTRADORES ────────────────────────────────────────────────────────────
+// Estas cuentas ven la pestaña "Admin" y pueden aprobar/rechazar técnicos.
+const ADMIN_EMAILS = ["ricardo.cruxx@gmail.com", "angelcastillongg@mail.com"];
+const isAdmin = (user) => !!user && ADMIN_EMAILS.includes((user.email || "").toLowerCase());
 
 // ─── FASE ACTUAL: VALIDACIÓN, SIN COSTO ────────────────────────────────────────
 const fmt = (n) => `$${Number(n).toLocaleString("es-MX")} MXN`;
@@ -180,6 +200,21 @@ const CATEGORIES = [
   { icon: ICON_KEY, label: "Cerrajería" },
   { icon: ICON_ROLLER, label: "Pintura" },
 ];
+
+const SERVICE_OPTS = ["Instalación", "Reparación", "Mantenimiento"];
+const ZONE_OPTS = [
+  { key: "centro-pitic", label: "Centro / Pitic", sub: "Centro, Pitic, Constitución, Modelo, San Benito" },
+  { key: "norte-bugambilias", label: "Norte / Bugambilias / Lomas de Hermosillo", sub: "Bugambilias, Lomas de Hermosillo, Las Minitas, Fuentes del Mezquital" },
+  { key: "poniente-kino", label: "Poniente / Kino / Las Quintas", sub: "Kino, Las Quintas, Los Arcos, Valle Verde" },
+  { key: "sur-villaseris", label: "Sur / Villa de Seris / Los Olivos", sub: "Villa de Seris, Los Olivos, Las Palmas del Sur, Altares" },
+  { key: "oriente-villadelreal", label: "Oriente / Villa del Real / Perisur", sub: "Villa del Real, Perisur, Las Colonitas, El Sahuaro" },
+  { key: "sureste-realdelsol", label: "Sureste / Real del Sol / Los Encinos", sub: "Real del Sol, Los Encinos, Real de Bugambilias, Balderrama" },
+  { key: "norponiente-solidaridad", label: "Norponiente / Solidaridad / Palo Verde", sub: "Solidaridad, Palo Verde, Puerta Real, Fuentes de Anza" },
+  { key: "noreste-countryclub", label: "Noreste / Country Club / Las Palmas", sub: "Country Club, Las Palmas, Nuevo Hermosillo, San Ángel" },
+  { key: "universidad-cincodemayo", label: "Universidad / Cinco de Mayo / Reforma", sub: "Cinco de Mayo, Reforma, Centenario, Las Águilas" },
+  { key: "periferico", label: "Periférico / colonias periféricas", sub: "Fraccionamientos y ejidos de reciente crecimiento en los márgenes de la ciudad" },
+];
+const EXP_OPTS = ["1 año", "2–3 años", "4–6 años", "7–10 años", "Más de 10 años"];
 
 // ─── MOCK DATA ──────────────────────────────────────────────────────────────────
 const TECHNICIANS = [
@@ -272,14 +307,30 @@ const S = {
   list: { search: "", svc: "", zone: "", rating: "", open: false },
   request: { selectedJob: null },
   profile: { selJob: null },
-  signup: { done: false },
+  signup: { done: false, tab: "editar" },
   auth: { user: null, loading: true, signingIn: false, error: "", menuOpen: false },
+  admin: { tab: "solicitudes", requests: [], rejectingId: null },
+  myTech: { doc: null, loading: true, notifications: [], saving: false, saved: false },
 };
+
+let unsubAdminRequests = null;
+let unsubMyTech = null;
+let unsubMyNotifications = null;
+
+function clearRealtimeListeners() {
+  if (unsubAdminRequests) { unsubAdminRequests(); unsubAdminRequests = null; }
+  if (unsubMyTech) { unsubMyTech(); unsubMyTech = null; }
+  if (unsubMyNotifications) { unsubMyNotifications(); unsubMyNotifications = null; }
+  S.admin.requests = [];
+  S.myTech = { doc: null, loading: true, notifications: [], saving: false, saved: false };
+}
 
 function nav(target, id) {
   if (id !== undefined && id !== null) S.eid = id;
   if (target === "eval") S.request = { selectedJob: null };
   if (target === "profile") S.profile.selJob = null;
+  if (target === "signup") { S.signup.tab = "editar"; S.myTech.saved = false; }
+  if (target === "admin") S.admin.rejectingId = null;
   S.page = target;
   renderApp();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -306,10 +357,47 @@ async function doSignOut() {
 }
 
 onAuthStateChanged(auth, (user) => {
+  clearRealtimeListeners();
   S.auth.user = user;
   S.auth.loading = false;
   S.auth.signingIn = false;
   renderApp();
+
+  if (!user) return;
+
+  // Perfil de técnico propio (si ya se registró alguna vez).
+  const myQ = query(collection(db, "tecnicos"), where("submittedBy", "==", user.uid), limit(1));
+  unsubMyTech = onSnapshot(myQ, (snap) => {
+    S.myTech.doc = snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
+    S.myTech.loading = false;
+    renderApp();
+
+    // Si el técnico está activo, escucha sus notificaciones de clientes.
+    if (unsubMyNotifications) { unsubMyNotifications(); unsubMyNotifications = null; }
+    if (S.myTech.doc && S.myTech.doc.status === "activo") {
+      const notifQ = query(
+        collection(db, "solicitudes_clientes"),
+        where("technicianPhone", "==", S.myTech.doc.phone),
+        orderBy("createdAt", "desc"),
+        limit(30)
+      );
+      unsubMyNotifications = onSnapshot(notifQ, (nSnap) => {
+        S.myTech.notifications = nSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderApp();
+      }, (err) => console.error("Error leyendo notificaciones:", err));
+    } else {
+      S.myTech.notifications = [];
+    }
+  }, (err) => { console.error("Error leyendo perfil de técnico:", err); S.myTech.loading = false; renderApp(); });
+
+  // Panel de administrador: solicitudes pendientes.
+  if (isAdmin(user)) {
+    const adminQ = query(collection(db, "tecnicos"), where("status", "==", "pendiente"), orderBy("createdAt", "desc"));
+    unsubAdminRequests = onSnapshot(adminQ, (snap) => {
+      S.admin.requests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderApp();
+    }, (err) => console.error("Error leyendo solicitudes de técnicos:", err));
+  }
 });
 
 function LoginGateHTML() {
@@ -347,13 +435,16 @@ function NavHTML() {
         </div>` : ""}
     </div>` : "";
 
+  const profileLabel = S.myTech.doc ? "Mi perfil" : "Soy técnico";
+
   return `
   <nav class="nav"><div class="nav-in">
     <button class="logo" data-nav="home">TUCA<span>DI</span></button>
     <div class="nl" style="align-items:center">
       <button class="nlink" data-nav="list">Técnicos</button>
       <button class="nlink" data-nav="how">¿Cómo funciona?</button>
-      <button class="ncta" data-nav="signup">Soy técnico</button>
+      <button class="ncta" data-nav="signup">${profileLabel}</button>
+      ${isAdmin(user) ? `<button class="nlink" data-nav="admin">Admin</button>` : ""}
       ${userBlock}
     </div>
   </div></nav>`;
@@ -820,102 +911,263 @@ function ProfileHTML() {
   </div>`;
 }
 
-// ─── SIGNUP PAGE ─────────────────────────────────────────────────────────────────
-function SignupHTML() {
-  if (S.signup.done) {
+// ─── SIGNUP / MI PERFIL PAGE ─────────────────────────────────────────────────────
+function jsDate(v) {
+  if (!v) return null;
+  if (typeof v.toDate === "function") return v.toDate();
+  return new Date(v);
+}
+
+function RegistrationFormHTML(existing) {
+  const d = existing || {};
+  const selServices = new Set(d.services || []);
+  const knownServiceLabels = new Set(SERVICE_OPTS);
+  const otherService = (d.services || []).find(s => !knownServiceLabels.has(s)) || "";
+  const selZones = new Set(d.zones || []);
+
+  return `
+  <form class="card-flat" style="padding:22px 18px" id="signupForm">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div><label class="lbl">Nombre completo *</label><input class="inp" placeholder="Ej. Carlos Mendoza" required name="name" value="${esc(d.name || "")}"></div>
+      <div><label class="lbl">Nombre del negocio</label><input class="inp" placeholder="Opcional" name="business" value="${esc(d.business || "")}"></div>
+      <div><label class="lbl">WhatsApp / Teléfono *</label><input class="inp" placeholder="662-XXX-XXXX" required type="tel" name="phone" value="${esc(d.phone || "")}"></div>
+      <div>
+        <label class="lbl">Años de experiencia *</label>
+        <select class="sel" required name="experience">
+          <option value="">Selecciona...</option>
+          ${EXP_OPTS.map(o => `<option ${d.experience === o ? "selected" : ""}>${o}</option>`).join("")}
+        </select>
+      </div>
+
+      <div>
+        <label class="lbl">Categoría de servicio *</label>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px">
+          ${CATEGORIES.map(c => `
+            <button type="button" class="cat-card" style="width:auto;padding:12px 8px;${c.active ? "" : "opacity:.5"}" ${c.active ? `data-category-select="${c.label}"` : "disabled"}>
+              <div class="cat-icon" style="width:38px;height:38px;background:${c.active ? "rgba(212,134,11,.12)" : "var(--bg-warm)"};color:${c.active ? "var(--amber)" : "var(--muted)"}">${c.icon}</div>
+              <span class="cat-name" style="font-size:11.5px">${c.label}</span>
+              ${c.active ? `<span class="cat-tag" style="color:var(--green)">Seleccionado</span>` : `<span class="cat-tag">Próximamente</span>`}
+            </button>`).join("")}
+        </div>
+        <input type="hidden" name="category" value="Aire acondicionado">
+      </div>
+
+      <div>
+        <label class="lbl">Servicios que ofreces *</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+          ${SERVICE_OPTS.map(s => `<button type="button" class="svc-btn ${selServices.has(s) ? "selected" : ""}" data-service-toggle="${esc(s)}">${esc(s)}</button>`).join("")}
+          <button type="button" class="svc-btn ${otherService ? "selected" : ""}" id="svcOtherToggle" data-service-toggle="Otro">Otro</button>
+        </div>
+        <input class="inp" id="svcOtherInput" placeholder="Describe el servicio adicional que ofreces" style="margin-top:10px;display:${otherService ? "block" : "none"}" name="serviceOther" value="${esc(otherService)}">
+      </div>
+
+      <div>
+        <label class="lbl">Zona(s) de cobertura * <span style="font-weight:400;color:var(--muted)">(elige una o varias)</span></label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          ${ZONE_OPTS.map(z => `
+            <label class="card-flat" style="display:flex;gap:10px;align-items:flex-start;padding:11px 14px;cursor:pointer">
+              <input type="checkbox" name="zone" value="${esc(z.label)}" ${selZones.has(z.label) ? "checked" : ""} style="margin-top:3px;flex-shrink:0">
+              <span>
+                <span style="display:block;font-weight:600;font-size:13.5px;color:var(--navy)">${esc(z.label)}</span>
+                <span style="display:block;font-size:12px;color:var(--muted);margin-top:2px">${esc(z.sub)}</span>
+              </span>
+            </label>`).join("")}
+        </div>
+      </div>
+
+      <div><label class="lbl">Cuéntanos sobre tu trabajo</label><textarea class="inp" placeholder="Marcas que manejas, tus especialidades, garantías que ofreces..." name="description">${esc(d.description || "")}</textarea></div>
+      <button type="submit" class="btn btn-navy full" style="padding:14px;font-size:15px">${d.status === "activo" ? "Guardar cambios" : d.status === "rechazado" ? "Reenviar solicitud →" : "Enviar solicitud →"}</button>
+      ${d.status !== "activo" ? `<p style="font-size:12px;color:var(--muted);text-align:center">Registro gratuito. Te contactamos para activar tu perfil.</p>` : ""}
+      ${S.myTech.saved ? `<p style="font-size:13px;color:var(--green);text-align:center;font-weight:600">✓ Cambios guardados</p>` : ""}
+    </div>
+  </form>`;
+}
+
+function NotificationsHTML() {
+  const notifs = S.myTech.notifications || [];
+  if (notifs.length === 0) {
     return `
-    <div style="min-height:60vh;display:flex;align-items:center;justify-content:center;padding:24px">
-      <div style="text-align:center;max-width:380px">
-        <div style="font-size:52px;margin-bottom:14px">🎉</div>
-        <h2 style="font-family:var(--fd);font-size:24px;font-weight:700;color:var(--navy);margin-bottom:10px">¡Gracias por registrarte!</h2>
-        <p style="font-size:14px;color:var(--mid);line-height:1.7">Hemos recibido tu solicitud. Nos pondremos en contacto pronto para activar tu perfil.</p>
+    <div class="card-flat" style="padding:24px;text-align:center;color:var(--muted);font-size:13px">
+      Aún no tienes notificaciones de clientes. Aparecerán aquí cuando alguien te contacte desde TUCADI.
+    </div>`;
+  }
+  return `
+  <div>
+    ${notifs.map(n => `
+      <div class="notif-card ${n.status === "nueva" ? "nueva" : ""}">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:6px">
+          <div>
+            <div style="font-weight:600;font-size:14px;color:var(--navy)">${esc(n.clientName || "Cliente")}</div>
+            <div style="font-size:12px;color:var(--muted)">${esc(n.jobName || "Consulta general")}${n.jobPrice ? " · " + fmt(n.jobPrice) : ""}</div>
+          </div>
+          <span class="status-pill ${n.status === "nueva" ? "sp-pendiente" : "sp-activo"}">${n.status === "nueva" ? "Nueva" : "Atendida"}</span>
+        </div>
+        ${n.description ? `<p style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:10px">${esc(n.description)}</p>` : ""}
+        ${n.status === "nueva" ? `<button class="btn btn-outline" style="font-size:12px;padding:7px 12px" data-mark-notif-atendida="${n.id}">Marcar como atendida</button>` : ""}
+      </div>`).join("")}
+  </div>`;
+}
+
+function SignupHTML() {
+  const user = S.auth.user;
+
+  if (S.myTech.loading) {
+    return `<div style="padding:60px 16px;text-align:center;color:var(--muted)">Cargando tu perfil…</div>`;
+  }
+
+  const tech = S.myTech.doc;
+
+  // Sin registro previo → formulario de alta.
+  if (!tech) {
+    return `
+    <div>
+      <div style="background:var(--bg-warm);border-bottom:1px solid var(--border);padding:28px 16px">
+        <div class="con" style="max-width:580px">
+          <span class="badge b-green" style="margin-bottom:12px">✓ Registro gratuito</span>
+          <h1 style="font-family:var(--fd);font-size:clamp(22px,4vw,32px);font-weight:700;color:var(--navy);margin-bottom:8px">Únete a TUCADI como técnico</h1>
+          <p style="font-size:14px;color:var(--mid);line-height:1.7">Tú defines los precios. TUCADI te trae clientes reales que buscan a alguien de confianza.</p>
+        </div>
+      </div>
+      <div style="padding:20px 16px 56px">
+        <div class="con" style="max-width:580px">
+          <div class="alert al-info" style="margin-bottom:20px">💡 Estamos en fase de prueba: registro gratis, sin comisión. Solo queremos validar si el modelo te sirve antes de construir esa parte.</div>
+          ${RegistrationFormHTML(null)}
+        </div>
       </div>
     </div>`;
   }
 
-  const svcs = ["Instalación", "Reparación", "Mantenimiento"];
-  const zoneOpts = [
-    { key: "centro-pitic", label: "Centro / Pitic", sub: "Centro, Pitic, Constitución, Modelo, San Benito" },
-    { key: "norte-bugambilias", label: "Norte / Bugambilias / Lomas de Hermosillo", sub: "Bugambilias, Lomas de Hermosillo, Las Minitas, Fuentes del Mezquital" },
-    { key: "poniente-kino", label: "Poniente / Kino / Las Quintas", sub: "Kino, Las Quintas, Los Arcos, Valle Verde" },
-    { key: "sur-villaseris", label: "Sur / Villa de Seris / Los Olivos", sub: "Villa de Seris, Los Olivos, Las Palmas del Sur, Altares" },
-    { key: "oriente-villadelreal", label: "Oriente / Villa del Real / Perisur", sub: "Villa del Real, Perisur, Las Colonitas, El Sahuaro" },
-    { key: "sureste-realdelsol", label: "Sureste / Real del Sol / Los Encinos", sub: "Real del Sol, Los Encinos, Real de Bugambilias, Balderrama" },
-    { key: "norponiente-solidaridad", label: "Norponiente / Solidaridad / Palo Verde", sub: "Solidaridad, Palo Verde, Puerta Real, Fuentes de Anza" },
-    { key: "noreste-countryclub", label: "Noreste / Country Club / Las Palmas", sub: "Country Club, Las Palmas, Nuevo Hermosillo, San Ángel" },
-    { key: "universidad-cincodemayo", label: "Universidad / Cinco de Mayo / Reforma", sub: "Cinco de Mayo, Reforma, Centenario, Las Águilas" },
-    { key: "periferico", label: "Periférico / colonias periféricas", sub: "Fraccionamientos y ejidos de reciente crecimiento en los márgenes de la ciudad" },
-  ];
-  const expOpts = ["1 año", "2–3 años", "4–6 años", "7–10 años", "Más de 10 años"];
+  // Solicitud enviada, esperando revisión.
+  if (tech.status === "pendiente") {
+    return `
+    <div style="min-height:60vh;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div class="card-flat" style="text-align:center;max-width:420px;padding:36px 28px">
+        <div style="font-size:44px;margin-bottom:14px">⏳</div>
+        <h2 style="font-family:var(--fd);font-size:22px;font-weight:700;color:var(--navy);margin-bottom:10px">Tu solicitud está en revisión</h2>
+        <p style="font-size:14px;color:var(--mid);line-height:1.7">Estamos revisando tu registro como técnico de ${esc(tech.category || "Aire acondicionado")}. Te avisaremos en cuanto sea aprobado.</p>
+      </div>
+    </div>`;
+  }
 
+  // Rechazado: revisa el periodo de espera.
+  if (tech.status === "rechazado") {
+    const nextDate = jsDate(tech.nextEligibleDate);
+    const canReapply = !nextDate || nextDate.getTime() <= Date.now();
+    return `
+    <div style="padding:40px 16px 56px">
+      <div class="con" style="max-width:520px">
+        <div class="card-flat" style="padding:28px 24px;margin-bottom:20px">
+          <div style="font-size:36px;margin-bottom:10px">✕</div>
+          <h2 style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--navy);margin-bottom:8px">Tu solicitud no fue aprobada</h2>
+          <p style="font-size:13px;color:var(--mid);margin-bottom:4px"><strong>Motivo:</strong> ${esc(tech.rejectionReason || "No especificado")}</p>
+          ${!canReapply ? `<p style="font-size:13px;color:var(--muted);margin-top:8px">Podrás volver a enviar tu solicitud a partir del ${nextDate.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}.</p>` : `<p style="font-size:13px;color:var(--green);margin-top:8px;font-weight:600">Ya puedes volver a enviar tu solicitud.</p>`}
+        </div>
+        ${canReapply ? RegistrationFormHTML(tech) : ""}
+      </div>
+    </div>`;
+  }
+
+  // Activo → editor de perfil + notificaciones de clientes.
   return `
   <div>
-    <div style="background:var(--bg-warm);border-bottom:1px solid var(--border);padding:28px 16px">
-      <div class="con" style="max-width:580px">
-        <span class="badge b-green" style="margin-bottom:12px">✓ Registro gratuito</span>
-        <h1 style="font-family:var(--fd);font-size:clamp(22px,4vw,32px);font-weight:700;color:var(--navy);margin-bottom:8px">Únete a TUCADI como técnico</h1>
-        <p style="font-size:14px;color:var(--mid);line-height:1.7">Tú defines los precios. TUCADI te trae clientes reales que buscan a alguien de confianza.</p>
+    <div style="background:var(--bg-warm);border-bottom:1px solid var(--border);padding:26px 16px">
+      <div class="con" style="max-width:640px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
+        <div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+            <h1 style="font-family:var(--fd);font-size:clamp(20px,3.5vw,26px);font-weight:700;color:var(--navy)">Mi perfil</h1>
+            <span class="status-pill sp-activo">Activo</span>
+          </div>
+          <p style="font-size:13px;color:var(--mid)">${esc(tech.name)} · ${esc(tech.category || "Aire acondicionado")}</p>
+        </div>
+        ${user && user.photoURL ? `<img src="${user.photoURL}" alt="" style="width:44px;height:44px;border-radius:50%">` : ""}
       </div>
     </div>
 
     <div style="padding:20px 16px 56px">
-      <div class="con" style="max-width:580px">
-        <div class="alert al-info" style="margin-bottom:20px">💡 Estamos en fase de prueba: registro gratis, sin comisión. Solo queremos validar si el modelo te sirve antes de construir esa parte.</div>
+      <div class="con" style="max-width:640px">
+        <div class="tab-row" style="margin-bottom:20px">
+          <button class="tab-btn ${S.signup.tab !== "notificaciones" ? "active" : ""}" data-signup-tab="editar">Editar información</button>
+          <button class="tab-btn ${S.signup.tab === "notificaciones" ? "active" : ""}" data-signup-tab="notificaciones">
+            Notificaciones ${S.myTech.notifications.filter(n => n.status === "nueva").length > 0 ? `<span class="badge b-amber" style="margin-left:4px">${S.myTech.notifications.filter(n => n.status === "nueva").length}</span>` : ""}
+          </button>
+        </div>
+        ${S.signup.tab === "notificaciones" ? NotificationsHTML() : RegistrationFormHTML(tech)}
+      </div>
+    </div>
+  </div>`;
+}
 
-        <form class="card-flat" style="padding:22px 18px" id="signupForm">
-          <div style="display:flex;flex-direction:column;gap:16px">
-            <div><label class="lbl">Nombre completo *</label><input class="inp" placeholder="Ej. Carlos Mendoza" required name="name"></div>
-            <div><label class="lbl">Nombre del negocio</label><input class="inp" placeholder="Opcional" name="business"></div>
-            <div><label class="lbl">WhatsApp / Teléfono *</label><input class="inp" placeholder="662-XXX-XXXX" required type="tel" name="phone"></div>
-            <div>
-              <label class="lbl">Años de experiencia *</label>
-              <select class="sel" required name="experience">
-                <option value="">Selecciona...</option>
-                ${expOpts.map(o => `<option>${o}</option>`).join("")}
-              </select>
-            </div>
+// ─── ADMIN PAGE ───────────────────────────────────────────────────────────────────
+function AdminRequestCardHTML(r) {
+  const isRejecting = S.admin.rejectingId === r.id;
+  return `
+  <div class="req-card">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px">
+      <div>
+        <div style="font-weight:700;font-size:15px;color:var(--navy)">${esc(r.name || "Sin nombre")}</div>
+        <div style="font-size:12px;color:var(--muted)">${esc(r.business || "")}</div>
+      </div>
+      <span class="status-pill sp-pendiente">Pendiente</span>
+    </div>
+    <div style="font-size:13px;color:var(--mid);margin-bottom:6px">
+      📞 ${esc(r.phone || "—")} · ${esc(r.experience || "—")} · ${esc(r.category || "Aire acondicionado")}
+    </div>
+    <div style="margin-bottom:6px">
+      ${(r.services || []).map(s => `<span class="stag">${esc(s)}</span>`).join(" ")}
+    </div>
+    <div style="margin-bottom:10px">
+      ${(r.zones || []).map(z => `<span class="zone-chip">${esc(z)}</span>`).join("")}
+    </div>
+    ${r.description ? `<p style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:10px">${esc(r.description)}</p>` : ""}
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Correo del solicitante: ${esc(r.submittedByEmail || "desconocido")}</div>
 
-            <div>
-              <label class="lbl">Categoría de servicio *</label>
-              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px">
-                ${CATEGORIES.map(c => `
-                  <button type="button" class="cat-card" style="width:auto;padding:12px 8px;${c.active ? "" : "opacity:.5"}" ${c.active ? `data-category-select="${c.label}"` : "disabled"}>
-                    <div class="cat-icon" style="width:38px;height:38px;background:${c.active ? "rgba(212,134,11,.12)" : "var(--bg-warm)"};color:${c.active ? "var(--amber)" : "var(--muted)"}">${c.icon}</div>
-                    <span class="cat-name" style="font-size:11.5px">${c.label}</span>
-                    ${c.active ? `<span class="cat-tag" style="color:var(--green)">Seleccionado</span>` : `<span class="cat-tag">Próximamente</span>`}
-                  </button>`).join("")}
-              </div>
-              <input type="hidden" name="category" value="Aire acondicionado">
-            </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-navy" style="font-size:13px;padding:9px 16px" data-approve-request="${r.id}">✓ Aprobar</button>
+      <button class="btn btn-outline" style="font-size:13px;padding:9px 16px" data-toggle-reject="${r.id}">${isRejecting ? "Cancelar" : "✕ Rechazar"}</button>
+    </div>
 
-            <div>
-              <label class="lbl">Servicios que ofreces *</label>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
-                ${svcs.map(s => `<button type="button" class="svc-btn" data-service-toggle="${esc(s)}">${esc(s)}</button>`).join("")}
-                <button type="button" class="svc-btn" id="svcOtherToggle" data-service-toggle="Otro">Otro</button>
-              </div>
-              <input class="inp" id="svcOtherInput" placeholder="Describe el servicio adicional que ofreces" style="margin-top:10px;display:none" name="serviceOther">
-            </div>
+    ${isRejecting ? `
+      <div class="reject-form">
+        <label class="lbl">Motivo del rechazo *</label>
+        <textarea class="inp" id="rejectReason-${r.id}" placeholder="Ej. Faltan datos de contacto, zona fuera de cobertura..." style="margin-bottom:10px;min-height:64px"></textarea>
+        <label class="lbl">Días de espera para volver a solicitar *</label>
+        <input class="inp" type="number" min="1" id="rejectDays-${r.id}" value="14" style="margin-bottom:12px;max-width:140px">
+        <button class="btn btn-navy" style="font-size:13px;padding:9px 16px" data-confirm-reject="${r.id}">Confirmar rechazo</button>
+      </div>` : ""}
+  </div>`;
+}
 
-            <div>
-              <label class="lbl">Zona(s) de cobertura * <span style="font-weight:400;color:var(--muted)">(elige una o varias)</span></label>
-              <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-                ${zoneOpts.map(z => `
-                  <label class="card-flat" style="display:flex;gap:10px;align-items:flex-start;padding:11px 14px;cursor:pointer">
-                    <input type="checkbox" name="zone" value="${esc(z.label)}" style="margin-top:3px;flex-shrink:0">
-                    <span>
-                      <span style="display:block;font-weight:600;font-size:13.5px;color:var(--navy)">${esc(z.label)}</span>
-                      <span style="display:block;font-size:12px;color:var(--muted);margin-top:2px">${esc(z.sub)}</span>
-                    </span>
-                  </label>`).join("")}
-              </div>
-            </div>
+function AdminHTML() {
+  const reqs = S.admin.requests;
+  return `
+  <div>
+    <div style="background:var(--bg-warm);border-bottom:1px solid var(--border);padding:26px 16px">
+      <div class="con">
+        <h1 style="font-family:var(--fd);font-size:clamp(20px,3.5vw,28px);font-weight:700;color:var(--navy);margin-bottom:4px">Panel de administrador</h1>
+        <p style="font-size:13px;color:var(--mid)">Gestión de técnicos y operación de TUCADI</p>
+      </div>
+    </div>
 
-            <div><label class="lbl">Cuéntanos sobre tu trabajo</label><textarea class="inp" placeholder="Marcas que manejas, tus especialidades, garantías que ofreces..." name="description"></textarea></div>
-            <button type="submit" class="btn btn-navy full" style="padding:14px;font-size:15px">Enviar solicitud →</button>
-            <p style="font-size:12px;color:var(--muted);text-align:center">Registro gratuito. Te contactamos para activar tu perfil.</p>
+    <div style="padding:20px 16px 56px">
+      <div class="con" style="max-width:760px">
+        <div class="tab-row" style="margin-bottom:20px">
+          <button class="tab-btn ${S.admin.tab === "solicitudes" ? "active" : ""}" data-admin-tab="solicitudes">
+            Solicitudes ${reqs.length > 0 ? `<span class="badge b-amber" style="margin-left:4px">${reqs.length}</span>` : ""}
+          </button>
+          <button class="tab-btn ${S.admin.tab === "dashboard" ? "active" : ""}" data-admin-tab="dashboard">Dashboard</button>
+        </div>
+
+        ${S.admin.tab === "dashboard" ? `
+          <div class="card-flat" style="padding:48px 24px;text-align:center">
+            <div style="font-size:38px;margin-bottom:12px">🚧</div>
+            <h2 style="font-family:var(--fd);font-size:19px;font-weight:700;color:var(--navy);margin-bottom:8px">Dashboard en proceso</h2>
+            <p style="font-size:13px;color:var(--muted)">Aquí vivirán las métricas de TUCADI: técnicos activos, solicitudes por zona y actividad de clientes.</p>
           </div>
-        </form>
+        ` : (
+          reqs.length === 0
+            ? `<div class="card-flat" style="padding:40px 24px;text-align:center;color:var(--muted);font-size:13px">No hay solicitudes pendientes por revisar.</div>`
+            : reqs.map(r => AdminRequestCardHTML(r)).join("")
+        )}
       </div>
     </div>
   </div>`;
@@ -930,6 +1182,7 @@ function pageHTML() {
     case "profile": return ProfileHTML();
     case "eval": return RequestHTML();
     case "signup": return SignupHTML();
+    case "admin": return isAdmin(S.auth.user) ? AdminHTML() : HomeHTML();
     default: return HomeHTML();
   }
 }
@@ -1002,6 +1255,87 @@ document.addEventListener("click", (e) => {
     const job = tech.jobs.find(j => j.id === S.request.selectedJob) || null;
     const desc = document.getElementById("reqDesc")?.value || "";
     window.open(buildWaLink(tech, job, desc), "_blank", "noopener");
+
+    // Registra la solicitud para que el técnico la vea en "Mi perfil → Notificaciones",
+    // si su perfil real en Firestore usa este mismo teléfono.
+    const clientUser = auth.currentUser;
+    addDoc(collection(db, "solicitudes_clientes"), {
+      technicianPhone: tech.phone,
+      technicianName: tech.name,
+      jobName: job ? job.name : null,
+      jobPrice: job ? job.price : null,
+      description: desc || "",
+      clientName: clientUser ? (clientUser.displayName || "") : "",
+      clientEmail: clientUser ? (clientUser.email || "") : "",
+      clientUid: clientUser ? clientUser.uid : null,
+      status: "nueva",
+      createdAt: serverTimestamp(),
+    }).catch(err => console.error("Error guardando notificación de cliente:", err));
+    return;
+  }
+
+  const signupTabEl = e.target.closest("[data-signup-tab]");
+  if (signupTabEl) {
+    S.signup.tab = signupTabEl.getAttribute("data-signup-tab");
+    renderApp();
+    return;
+  }
+
+  const adminTabEl = e.target.closest("[data-admin-tab]");
+  if (adminTabEl) {
+    S.admin.tab = adminTabEl.getAttribute("data-admin-tab");
+    S.admin.rejectingId = null;
+    renderApp();
+    return;
+  }
+
+  const approveEl = e.target.closest("[data-approve-request]");
+  if (approveEl) {
+    const id = approveEl.getAttribute("data-approve-request");
+    approveEl.disabled = true;
+    updateDoc(doc(db, "tecnicos", id), {
+      status: "activo",
+      approvedAt: serverTimestamp(),
+      rejectionReason: null,
+      nextEligibleDate: null,
+    }).catch(err => { console.error("Error aprobando técnico:", err); alert("No se pudo aprobar. Intenta de nuevo."); });
+    return;
+  }
+
+  const toggleRejectEl = e.target.closest("[data-toggle-reject]");
+  if (toggleRejectEl) {
+    const id = toggleRejectEl.getAttribute("data-toggle-reject");
+    S.admin.rejectingId = S.admin.rejectingId === id ? null : id;
+    renderApp();
+    return;
+  }
+
+  const confirmRejectEl = e.target.closest("[data-confirm-reject]");
+  if (confirmRejectEl) {
+    const id = confirmRejectEl.getAttribute("data-confirm-reject");
+    const reasonEl = document.getElementById(`rejectReason-${id}`);
+    const daysEl = document.getElementById(`rejectDays-${id}`);
+    const reason = reasonEl ? reasonEl.value.trim() : "";
+    const days = daysEl ? parseInt(daysEl.value, 10) : 14;
+    if (!reason) { alert("Escribe un motivo de rechazo."); return; }
+    if (!days || days < 1) { alert("Indica un número válido de días."); return; }
+    confirmRejectEl.disabled = true;
+    const nextEligibleDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    updateDoc(doc(db, "tecnicos", id), {
+      status: "rechazado",
+      rejectionReason: reason,
+      nextEligibleDate,
+      rejectedAt: serverTimestamp(),
+    }).then(() => { S.admin.rejectingId = null; }).catch(err => { console.error("Error rechazando técnico:", err); alert("No se pudo rechazar. Intenta de nuevo."); });
+    return;
+  }
+
+  const markNotifEl = e.target.closest("[data-mark-notif-atendida]");
+  if (markNotifEl) {
+    const id = markNotifEl.getAttribute("data-mark-notif-atendida");
+    markNotifEl.disabled = true;
+    updateDoc(doc(db, "solicitudes_clientes", id), { status: "atendida" })
+      .catch(err => console.error("Error actualizando notificación:", err));
     return;
   }
 
@@ -1077,28 +1411,53 @@ document.addEventListener("submit", async (e) => {
     return;
   }
 
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Enviando..."; }
+  const existingTech = S.myTech.doc;
+  const isEditingActive = existingTech && existingTech.status === "activo";
+  const isReapplying = existingTech && existingTech.status === "rechazado";
+  const originalLabel = submitBtn ? submitBtn.textContent : "";
+
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = isEditingActive ? "Guardando..." : "Enviando..."; }
+
+  const payload = {
+    name: form.name.value.trim(),
+    business: form.business.value.trim(),
+    phone: form.phone.value.trim(),
+    experience: form.experience.value,
+    category: form.category.value,
+    services: selectedServices,
+    zones: selectedZones,
+    description: form.description.value.trim(),
+  };
 
   try {
-    await addDoc(collection(db, "tecnicos"), {
-      name: form.name.value.trim(),
-      business: form.business.value.trim(),
-      phone: form.phone.value.trim(),
-      experience: form.experience.value,
-      category: form.category.value,
-      services: selectedServices,
-      zones: selectedZones,
-      description: form.description.value.trim(),
-      status: "pendiente",
-      createdAt: serverTimestamp(),
-      submittedBy: auth.currentUser ? auth.currentUser.uid : null,
-    });
-    S.signup.done = true;
-    renderApp();
+    if (isEditingActive) {
+      // Técnico activo editando su propia información.
+      await updateDoc(doc(db, "tecnicos", existingTech.id), payload);
+      S.myTech.saved = true;
+      renderApp();
+    } else if (isReapplying) {
+      // Reenvío tras un rechazo: vuelve a quedar pendiente de revisión.
+      await updateDoc(doc(db, "tecnicos", existingTech.id), {
+        ...payload,
+        status: "pendiente",
+        rejectionReason: null,
+        nextEligibleDate: null,
+        resubmittedAt: serverTimestamp(),
+      });
+    } else {
+      // Alta nueva.
+      await addDoc(collection(db, "tecnicos"), {
+        ...payload,
+        status: "pendiente",
+        createdAt: serverTimestamp(),
+        submittedBy: auth.currentUser ? auth.currentUser.uid : null,
+        submittedByEmail: auth.currentUser ? auth.currentUser.email : null,
+      });
+    }
   } catch (err) {
     console.error("Error guardando registro en Firestore:", err);
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Enviar solicitud →"; }
-    alert("No se pudo enviar tu registro. Revisa tu conexión e intenta de nuevo.");
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalLabel; }
+    alert("No se pudo guardar tu información. Revisa tu conexión e intenta de nuevo.");
   }
 });
 
