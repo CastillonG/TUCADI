@@ -1299,7 +1299,7 @@ document.addEventListener("click", (e) => {
       approvedAt: serverTimestamp(),
       rejectionReason: null,
       nextEligibleDate: null,
-    }).catch(err => { console.error("Error aprobando técnico:", err); alert("No se pudo aprobar. Intenta de nuevo."); });
+    }).catch(err => { console.error("Error aprobando técnico:", err); alert("No se pudo aprobar: " + (err.message || err.code || "error desconocido")); approveEl.disabled = false; });
     return;
   }
 
@@ -1327,7 +1327,7 @@ document.addEventListener("click", (e) => {
       rejectionReason: reason,
       nextEligibleDate,
       rejectedAt: serverTimestamp(),
-    }).then(() => { S.admin.rejectingId = null; }).catch(err => { console.error("Error rechazando técnico:", err); alert("No se pudo rechazar. Intenta de nuevo."); });
+    }).then(() => { S.admin.rejectingId = null; renderApp(); }).catch(err => { console.error("Error rechazando técnico:", err); alert("No se pudo rechazar: " + (err.message || err.code || "error desconocido")); confirmRejectEl.disabled = false; });
     return;
   }
 
