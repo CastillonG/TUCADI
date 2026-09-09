@@ -130,8 +130,12 @@
   /* Una sola columna por defecto (celular); dos columnas solo en pantallas
      anchas. Nada de estilos en línea peleando con la hoja de estilos. */
   #profileGrid{display:grid;grid-template-columns:1fr;gap:24px;align-items:start}
+  @media(max-width:768px){
+    #techSidebar{order:-1}
+  }
   @media(min-width:769px){
     #profileGrid{grid-template-columns:1fr 290px}
+    #techSidebar{position:sticky;top:76px}
   }
 
   .svc-btn{padding:10px 18px;font-size:14px;border-radius:var(--rs);border:1.5px solid var(--border);background:white;color:var(--mid)}
@@ -1239,7 +1243,7 @@ function ProfileHTML() {
             ${reviewsBlock}
           </div>
 
-          <div class="hide-mobile" style="position:sticky;top:76px">
+          <div id="techSidebar">
             <div class="card" style="padding:22px">
               <h3 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px">¿Listo para empezar?</h3>
               <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">Arma tu solicitud y contacta directo al técnico. Sin costo por ahora.</p>
