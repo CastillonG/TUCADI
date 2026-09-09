@@ -113,10 +113,19 @@
   .flogo span{color:var(--amber-light)}
 
   .wafloat{display:none}
+  /* "Oculto en celular" ahora es el comportamiento base, sin depender de
+     que una media query "se acuerde" de ocultarlo — así nunca se puede
+     quedar visible por accidente si algo falla al aplicar el CSS. Se
+     vuelve a mostrar explícitamente solo en pantallas anchas. */
+  .hide-mobile{display:none}
+  @media(min-width:769px){
+    span.hide-mobile{display:inline}
+    button.hide-mobile{display:inline-flex}
+    div.hide-mobile{display:block}
+  }
   @media(max-width:768px){
     .wafloat{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:200;background:white;border-top:1px solid var(--border);padding:12px 16px;gap:10px;box-shadow:0 -4px 20px rgba(15,37,64,.1)}
     .has-wafloat{padding-bottom:78px}
-    .hide-mobile{display:none!important}
   }
   /* Una sola columna por defecto (celular); dos columnas solo en pantallas
      anchas. Nada de estilos en línea peleando con la hoja de estilos. */
