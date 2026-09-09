@@ -1253,7 +1253,7 @@ function ProfileHTML() {
                 <div class="divider"></div>
               </div>
               <div style="display:flex;flex-direction:column;gap:10px">
-                ${[["Servicios", (tech.services || []).join(", ") || "—"], ["Zona", tech.zone || "—"], ["Experiencia", expLabel]].map(([l, v]) => `
+                ${[["Servicios", (tech.services || []).join(", ") || "—"]].map(([l, v]) => `
                   <div style="display:flex;justify-content:space-between;font-size:13px;gap:10px">
                     <span style="color:var(--muted)">${l}</span>
                     <span style="font-weight:600;color:var(--navy);text-align:right;max-width:160px">${esc(v)}</span>
