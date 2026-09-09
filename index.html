@@ -1245,11 +1245,13 @@ function ProfileHTML() {
 
           <div id="techSidebar">
             <div class="card" style="padding:22px">
-              <h3 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px">¿Listo para empezar?</h3>
-              <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">Arma tu solicitud y contacta directo al técnico. Sin costo por ahora.</p>
-              <button class="btn btn-amber full" style="margin-bottom:10px" data-nav="eval" data-id="${tech.id}">Solicitar</button>
-              <a href="https://wa.me/52${tech.phone}" target="_blank" rel="noopener noreferrer" class="btn btn-wa-lg">${WA_SVG} WhatsApp directo</a>
-              <div class="divider"></div>
+              <div class="hide-mobile">
+                <h3 style="font-family:var(--fd);font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px">¿Listo para empezar?</h3>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">Arma tu solicitud y contacta directo al técnico. Sin costo por ahora.</p>
+                <button class="btn btn-amber full" style="margin-bottom:10px" data-nav="eval" data-id="${tech.id}">Solicitar</button>
+                <a href="https://wa.me/52${tech.phone}" target="_blank" rel="noopener noreferrer" class="btn btn-wa-lg">${WA_SVG} WhatsApp directo</a>
+                <div class="divider"></div>
+              </div>
               <div style="display:flex;flex-direction:column;gap:10px">
                 ${[["Servicios", (tech.services || []).join(", ") || "—"], ["Zona", tech.zone || "—"], ["Experiencia", expLabel]].map(([l, v]) => `
                   <div style="display:flex;justify-content:space-between;font-size:13px;gap:10px">
@@ -1264,11 +1266,8 @@ function ProfileHTML() {
     </div>
 
     <div class="wafloat">
-      <div style="flex:1">
-        <div style="font-weight:600;font-size:14px;color:var(--navy)">${esc(tech.name)}</div>
-        <div style="font-size:12px;color:var(--muted)">Contacto directo, sin costo de plataforma</div>
-      </div>
-      <button class="btn btn-amber" style="flex-shrink:0;padding:12px 18px;font-size:14px" data-nav="eval" data-id="${tech.id}">Solicitar →</button>
+      <a href="https://wa.me/52${tech.phone}" target="_blank" rel="noopener noreferrer" class="btn btn-wa" style="flex-shrink:0;padding:12px 16px;font-size:14px" aria-label="WhatsApp directo">${WA_SVG}</a>
+      <button class="btn btn-amber full" style="flex:1;padding:12px 16px;font-size:14px" data-nav="eval" data-id="${tech.id}">Solicitar →</button>
     </div>
   </div>`;
 }
