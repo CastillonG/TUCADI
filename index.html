@@ -117,10 +117,12 @@
     .wafloat{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:200;background:white;border-top:1px solid var(--border);padding:12px 16px;gap:10px;box-shadow:0 -4px 20px rgba(15,37,64,.1)}
     .has-wafloat{padding-bottom:78px}
     .hide-mobile{display:none!important}
-    /* La columna lateral de 290px se ocultaba pero seguía reservando su
-       ancho fijo, dejando el contenido principal aplastado contra la
-       izquierda. En móvil el perfil pasa a una sola columna. */
-    #profileGrid{grid-template-columns:1fr}
+  }
+  /* Una sola columna por defecto (celular); dos columnas solo en pantallas
+     anchas. Nada de estilos en línea peleando con la hoja de estilos. */
+  #profileGrid{display:grid;grid-template-columns:1fr;gap:24px;align-items:start}
+  @media(min-width:769px){
+    #profileGrid{grid-template-columns:1fr 290px}
   }
 
   .svc-btn{padding:10px 18px;font-size:14px;border-radius:var(--rs);border:1.5px solid var(--border);background:white;color:var(--mid)}
@@ -1215,7 +1217,7 @@ function ProfileHTML() {
 
     <div style="padding:20px 16px 56px">
       <div class="con">
-        <div style="display:grid;grid-template-columns:1fr 290px;gap:24px;align-items:start" id="profileGrid">
+        <div id="profileGrid">
           <div>
             ${jobsBlock}
 
